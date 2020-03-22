@@ -1,2 +1,2 @@
 # mdgen
-A tool to generate utility meter data based on multiple strategies
+A tool to generate utility meter data in multiple formats
