@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test Generator API</title>
+</head>
+<body>
+	<h1>Test Generator API</h1>
+	<div>
+		<label for="api_input_ta">JSON Input</label>
+		<textarea id="api_input_ta" rows="20" cols="80" name="apiInput"></textarea>
+	</div>
+	<div>
+		<button id="call_btn">Invoke generator API</button>
+		<button id="call_test_xai">Sample XAI Request</button>
+		<button id="call_test_nem12">Sample NEM12 Request</button>
+	</div>
+	<div>
+		<label for="api_output_ta">JSON Input</label>
+		<textarea id="api_output_ta" rows="20" cols="80" name="apiInput" disabled="disabled"></textarea>
+	</div>
+	
+	<script type="text/javascript">
+	(function() {
+	let testinput = {
+		mdp: "ACUMEMDP",
+		targetParticipant: "ENGYAUST",
+		nem12FileName: "ACUMEMDP-SAMPLE",
+		nem12UpdateDateTime: "2020-03-19T10:15:00+10:00",
+		channelTemplates: [
+		{nmiSuffix: "E1", uom: "KWH", intervalSize: 30, reads: [
+			{rd: 2, qual: "A"},
+			{rd: 3, qual: "A"},
+			{rd: 4, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 2.1, qual: "A"}]
+		},
+		{nmiSuffix: "B1", uom: "KWH", intervalSize: 30, reads: [
+			{rd: 2, qual: "A"},
+			{rd: 3, qual: "A"},
+			{rd: 4, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 5, qual: "A"},
+			{rd: 6, qual: "A"},
+			{rd: 7, qual: "A"},
+			{rd: 7.6, qual: "A"},
+			{rd: 8.5, qual: "A"},
+			{rd: 2.4, qual: "A"},
+			{rd: 2.3, qual: "A"},
+			{rd: 5, qual: "E52"},
+			{rd: 5, qual: "E52"},
+			{rd: 5, qual: "E52"},
+			{rd: 6, qual: "E51"},
+			{rd: 2.3, qual: "E51"},
+			{rd: 2.1, qual: "E51"}]
+		}
+		],
+		requestedChannels: [
+		{nmi: "1234567890", meterSerialNumber: "MTR001", nmiSuffix: "E1", registerId: "E1", startDate: "2019-08-22", endDate: "2019-10-02"},
+		{nmi: "1234567890", meterSerialNumber: "MTR001", nmiSuffix: "B1", registerId: "B1", startDate: "2020-01-01", endDate: "2020-01-03"},
+		{nmi: "9876543210", meterSerialNumber: "ZB2200", nmiSuffix: "E1", registerId: "11", startDate: "2020-01-01", endDate: "2020-01-01"},
+		{nmi: "9876543210", meterSerialNumber: "ZB2200", nmiSuffix: "E2", registerId: "E1", startDate: "2020-01-01", endDate: "2020-01-01"}
+		]
+	};
+	
+	document.getElementById("call_btn").onclick = function() {
+		callApi("../api/generator/xai", 
+			document.getElementById("api_input_ta").value, 
+			function(response) {
+				document.getElementById("api_output_ta").value = JSON.stringify(response, null, 4);
+			});
+	};
+	
+	document.getElementById("call_test_xai").onclick = function() {
+		document.getElementById("api_input_ta").value = JSON.stringify(testinput, null, 4);
+		callApi("../api/generator/xai", 
+			document.getElementById("api_input_ta").value,
+			function(response) {
+			document.getElementById("api_output_ta").value = JSON.stringify(response, null, 4);
+		});
+	};
+	
+	document.getElementById("call_test_nem12").onclick = function() {
+		document.getElementById("api_input_ta").value = JSON.stringify(testinput, null, 4);
+		callApi("../api/generator/nem12", 
+			document.getElementById("api_input_ta").value,
+			function(response) {
+			document.getElementById("api_output_ta").value = JSON.stringify(response, null, 4);
+		});
+	};
+	function callApi(api, input, callback) {
+		let request = new XMLHttpRequest();
+		request.open("POST", api, true);
+		request.setRequestHeader("Content-Type", "application/json");
+		
+		request.onreadystatechange = function() {
+			if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+				console.log("API call successfully");
+				let res = JSON.parse(request.response);
+				//document.getElementById("api_output_ta").value = JSON.stringify(res, null, 4);
+				callback(res);
+			}
+		}
+		request.send(input);
+		//request.send(JSON.stringify(testinput));
+	}
+	})();
+	</script>
+</body>
+</html>
