@@ -11,7 +11,7 @@
 	<transition name="fade">
 	<div class="modal">
 		<div class="modal-wrapper">
-			<div class="modal-container" v-bind:class="[containerClass]">
+			<div class="modal-container" :class="[containerClass]">
 				<slot></slot>
 			</div>
 		</div>
@@ -24,11 +24,12 @@
 		<h2>Set the interval size</h2>
 		<p>Set the interval size for meter data to be generated. Data for all meters and channels will be generated with this interval size</p>
 		<div class="input-section">
+			<div></div>
     		<label>Size</label>
     		<select v-model="size">
-        	<option v-for="int in config.intervals" v-bind:value="int.size">{{int.label}}</option>
+        	<option v-for="int in config.intervals" :value="int.size">{{int.label}}</option>
 			</select>
-			<button v-on:click="setSize">Set Size</button>
+			<button @click="setSize">Set Size</button>
 		</div>
 	</div>
 	</script> 
@@ -36,12 +37,12 @@
 	<div class="section">
 		<h2>Manage Channel Templates</h2>
 		<p>Add or Remove channel templates below</p>
-		<div class="input-section">
-			<div v-if="error != ''" class="error">{{error}}</div>
+		<div class="input-section" :class="{error: error}">
+			<span class="message">{{error}}</span>
 			<label>NMI Suffix</label>
 			<input v-model="id" type="text">
-            <button v-on:click="addChannel">Add</button>
-            <button>Add Residential Channel</button>
+            <button @click="addChannel(true)">Add</button>
+            <button @click="addChannel(false)">Add Zero Channel</button>
 		</div>
 
 		<table class="channel">
@@ -51,12 +52,12 @@
 		            <th v-for="(channel, chi) in channels">
 					<div class="cell-row">
 						<span class="nmi-suffix">{{channel.nmiSuffix}}</span>
-						<button v-on:click="deleteChannel(chi)">Delete</button>
+						<button @click="deleteChannel(chi)">Delete</button>
 					</div>
 					<div class="cell-row">
 						<span class="uom">UoM</span>
 						<select v-model="$parent.channels[chi].uom">
-						<option v-for="uom in config.uoms" v-bind:value="uom">{{uom}}</option>
+						<option v-for="uom in config.uoms" :value="uom">{{uom}}</option>
 						</select>
 					</div>
 					</th>
@@ -66,8 +67,8 @@
 		        <tr v-for="(interval, inti) in intervalLabels">
 		            <td>{{interval.label}}</td>
 		            <td v-for="(channel, chi) in channels">
-						<input class="read" type="number" v-model="$parent.channels[chi].intervals[inti].value" size="5" v-on:change="checkValue(chi, inti)" v-bind:class="{ error: channels[chi].intervals[inti].valError}">
-						<input class="quality" type="text" v-model="$parent.channels[chi].intervals[inti].quality" size="2" v-on:change="checkQuality(chi, inti)" v-bind:class="{ error: channels[chi].intervals[inti].qualError}">
+						<input class="read" type="number" v-model="$parent.channels[chi].intervals[inti].value" size="5" @change="checkValue(chi, inti)" :class="{ error: channels[chi].intervals[inti].valError}">
+						<input class="quality" type="text" v-model="$parent.channels[chi].intervals[inti].quality" size="2" @change="checkQuality(chi, inti)" :class="{ error: channels[chi].intervals[inti].qualError}">
 
 					</td>
 		        </tr>
@@ -78,18 +79,27 @@
 
 	<script type="text/x-template" id="meter-entries-template">
 	<div class="section">
-		<h3>NMI Meter List</h3>
+		<h2>NMI Meter List</h2>
 
-	    <add-single-entry v-if="showEntryMode == 'single'" v-bind:config="config" v-on:add-entries="addEntries" v-on:cancel="cancel"></add-single-entry>
-	    <add-multiple-entries v-if="showEntryMode == 'multiple'" v-bind:config="config" v-on:add-entries="addEntries" v-on:cancel="cancel"></add-multiple-entries>
-		<view-all-entries v-if="viewAllEntriesVisible" v-bind:entries="entries" v-on:close="closeViewAllEntries"></view-all-entries>
+		<view-all-entries v-if="viewAllEntriesVisible" 
+			:config="config" :entries="entries" 
+			@edit-entry="editEntry" @delete-entry="deleteEntry" @close="closeViewAllEntries"></view-all-entries>
+	    <add-single-entry v-if="showEntryMode == 'single'" 
+			:config="config" action-label="Add" 
+			@add-entries="addEntries" @cancel="cancel"></add-single-entry>
+	    <add-multiple-entries v-if="showEntryMode == 'multiple'" 
+			:config="config" 
+			@add-entries="addEntries" @cancel="cancel"></add-multiple-entries>
+	    <add-single-entry v-if="showEntryMode == 'edit'" 
+			:config="config" :entries="entries" mode="edit" action-label="Edit" :index="indexToEdit" 
+			@update-entry="updateEntry" @cancel="cancel"></add-single-entry>
 		<div>
 			<span>Number of entries: </span><span class="value">{{entries.length}}</span><button @click="showViewAllEntries">View All Entries</button>
 		</div>
 
 		<div class="actions">
-			<button v-on:click="showAddSingleEntry">Add Single Entry</button>
-			<button v-on:click="showAddMultipleEntries">Add Multiple Entries</button>
+			<button @click="showAddSingleEntry">Add Single Entry</button>
+			<button @click="showAddMultipleEntries">Add Multiple Entries</button>
 		</div>
 	</div>
 	</script>
@@ -113,7 +123,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="e in entries">
+				<tr v-for="(e, ei) in entries">
 					<td>{{e.mdp}}</td>
 					<td>{{e.nmi}}</td>
 					<td>{{e.meterSerialNumber}}</td>
@@ -122,7 +132,7 @@
 					<td>{{e.startDate}}</td>
 					<td>{{e.endDate}}</td>
 					<td>{{e.transactionId}}</td>
-					<td><button>Edit</button><button>Del</button></td>
+					<td><button @click="editEntry(ei)">Edit</button><button @click="deleteEntry(ei)">Del</button></td>
 				</tr>
 			</tbody>		
 		</table>
@@ -131,40 +141,55 @@
 		</div>
 	</modal-popup>
 	</script>
+	
 	<script type="text/x-template" id="add-single-entry-template">
 	<modal-popup>	
-		<h3>Add a Single Entry</h3>
+		<h3>{{actionLabel}} a Single Entry</h3>
 		<div :class="{ error: mdpError }">
+			<span class="message">{{mdpError}}</span>
 			<label>MDP</label>
 			<select v-model="mdp">
-				<option v-for="mdp in config.mdps" v-bind:value="mdp">{{mdp}}</option>
-			</select><span v-if="mdpError">{{mdpError}}</span>
+				<option v-for="mdp in config.mdps" :value="mdp">{{mdp}}</option>
+			</select>
 		</div>
 		<div :class="{ error: nmiError }">
-			<label>NMI</label><input type="text" v-model="nmi"><span v-if="nmiError">{{nmiError}}</span>
+			<span class="message">{{nmiError}}</span>
+			<label>NMI</label>
+			<input type="text" v-model="nmi">
 		</div>
 		<div :class="{ error: meterSerialNumberError }">
+			<span class="message">{{meterSerialNumberError}}</span>
 			<label>Meter Serial Number</label>
-			<input type="text" v-model="meterSerialNumber"><span v-if="meterSerialNumberError">{{meterSerialNumberError}}</span>
+			<input type="text" v-model="meterSerialNumber">
 		</div>
 		<div :class="{ error: nmiSuffixError }">
+			<span class="message">{{nmiSuffixError}}</span>
 			<label>NMI Suffix</label>
-			<input type="text" v-model="nmiSuffix"><span v-if="nmiSuffixError">{{nmiSuffixError}}</span>
+			<input type="text" v-model="nmiSuffix">
 		</div>
 		<div>
-			<label>Register ID</label><input type="text" v-model="registerId">
+			<span class="message">{{registerIdError}}</span>
+			<label>Register ID</label>
+			<input type="text" v-model="registerId">
 		</div>
 		<div>
-			<label>Start Date</label><input type="date" v-model="startDate">
+			<span class="message">{{startDateError}}</span>
+			<label>Start Date</label>
+			<input type="date" v-model="startDate">
 		</div>
 		<div>
-			<label>End Date</label><input type="date" v-model="endDate">
+			<span class="message">{{endDateError}}</span>
+			<label>End Date</label>
+			<input type="date" v-model="endDate">
 		</div>
 		<div>
-			<label>PMDR / VMDR Transaction ID</label><input type="text" v-model="transactionId">
+			<span class="message">{{transactionIdError}}</span>
+			<label>PMDR / VMDR Transaction ID</label>
+			<input type="text" v-model="transactionId">
 		</div>
 		<div class="actions">
-			<button @click="add">Add</button><button @click="cancel">Cancel</button>
+			<button @click="performAction">{{actionLabel}}</button>
+			<button @click="cancel">Cancel</button>
 		</div>
 	</modal-popup>
 	</script>
@@ -172,11 +197,12 @@
 	<script type="text/x-template" id="add-multiple-entries-template">
 	<modal-popup>
 		<h3>Add Multiple Entries</h3>
-		<div>
+		<div :class="{ error: mdpError }">
+			<span class="message">{{mdpError}}</span>
 			<label>MDP</label>
 			<select v-model="mdp">
-				<option v-for="mdpcd in config.mdps" v-bind:value="mdpcd">{{mdpcd}}</option>
-			</select>{{mdp}}
+				<option v-for="mdpcd in config.mdps" :value="mdpcd">{{mdpcd}}</option>
+			</select>
 		</div>
 		<p>Provide multiple entries in the text box below. Provide one entry per line with comma-separated values. Each entry should be in the format shown below</p>
 		<p><em>NMI, Meter Serial Number, NMI Suffix, Register ID (optional), Start Date, End Date</em></p>
@@ -188,9 +214,8 @@
 		<div>
 			<textarea v-model="entriesText" cols="80" rows="15"></textarea>
 		</div>
-		<div>{{entriesText}}</div>
 		<div class="actions">
-			<button v-on:click="add">Add</button><button v-on:click="cancel">Cancel</button>
+			<button @click="add">Add</button><button @click="cancel">Cancel</button>
 		</div>
 	</modal-popup>
 	</script>
@@ -205,18 +230,17 @@
 		<h3>Select a Delivery Method</h3>
 		<div class="tabs">
 			<button v-for="(config, method) in deliveryMethods" 
-				v-on:click="select(method)"
-				v-bind:class="{ selected: selectedMethod == method}">
+				@click="select(method)"
+				:class="{ selected: selectedMethod == method}">
 				{{config.label}}
 			</button>
 		</div>
-		<component 
-			v-bind:is="deliveryMethodComponent" 
-			v-on:cancel="cancel"
-			v-on:generate-imd-via-jms="generateImdViaJms"
-			v-on:generate-imd-via-xai="generateImdViaXai"
-			v-on:generate-nem12-csv="generateNem12Csv"
-	        v-on:generate-nem12-asexml="generateNem12AseXML">
+		<component :is="deliveryMethodComponent" 
+			@cancel="cancel"
+			@generate-imd-via-jms="generateImdViaJms"
+			@generate-imd-via-xai="generateImdViaXai"
+			@generate-nem12-csv="generateNem12Csv"
+	        @generate-nem12-asexml="generateNem12AseXML">
 		</component>
 	</modal-popup>
 	</div>
@@ -228,7 +252,7 @@
 		<div>
 			<label>Select a JMS Server</label>
 			<select v-model="server">
-				<option v-for="(config, server) in servers" v-bind:value="server">{{config.name}}</option>
+				<option v-for="(config, server) in servers" :value="server">{{config.name}}</option>
 			</select>
 		</div>
 		<div>
@@ -239,8 +263,8 @@
 			<div v-for="q in serverQueues">{{q.name}}</div>
 		</div>
 		<div class="actions">
-			<button v-on:click="generate">Generate</button>
-			<button v-on:click="cancel">Cancel</button>
+			<button @click="generate">Generate</button>
+			<button @click="cancel">Cancel</button>
 		</div>
 	</div>
 	</script>
@@ -257,30 +281,22 @@
 				<option value="UAT">UAT</option>
 			</select>
 		</div>
-		<div>
-			<label>User Name</label>
-			<input type="text">
-		</div>
-		<div>
-			<label>Password</label>
-			<input type="password">
-		</div>
 		<div class="actions">
-			<button v-on:click="generate">Generate</button>
-			<button v-on:click="cancel">Cancel</button>
+			<button @click="generate">Generate</button>
+			<button @click="cancel">Cancel</button>
 		</div>
 	</div>
 	</script>
 
 	<script type="text/x-template" id="nem12-template">
 	<div class="tab-content">
+		<p>Download a NEL12 file. Select the format of NEM12 file below</p>
 		<div>
-			<p>Select the format of NEM12 file below</p>
-			<button v-on:click="downloadNem12">NEM12 CSV</button>
-			<button v-on:click="downloadNem12AseXML">NEM12 aseXML</button>
+			<button @click="downloadNem12">NEM12 CSV</button>
+			<button @click="downloadNem12AseXML">NEM12 aseXML</button>
 		</div>
 		<div class="actions">
-			<button v-on:click="cancel">Cancel</button>
+			<button @click="cancel">Cancel</button>
 		</div>
 	</div>
 	</script>
@@ -317,33 +333,31 @@
 			<img src="img/loading_spinner.gif"/>
 		</div>
 		<select-size
-			v-bind:config="config" 
-			v-on:set-size="setSize"></select-size>
+			:config="config" 
+			@set-size="setSize"></select-size>
 		<div v-if="intervalSize">
 			<manage-channels 
-				v-bind:config="config" 
-				v-bind:channels="channels" 
-				v-bind:interval-labels="intervalLabels"
-				v-on:add-channel="addChannel"
-				v-on:delete-channel="deleteChannel"></manage-channels>
+				:config="config" :channels="channels" :interval-size="intervalSize" :interval-labels="intervalLabels"
+				@add-channel="addChannel" @delete-channel="deleteChannel"></manage-channels>
 	        <meter-entries 
-	        	v-bind:config="config" 
-	        	v-bind:entries="entries"
-	        	v-on:add-entries="addEntries"></meter-entries>
-	        <delivery-method 
-	        	v-on:generate-imd-via-jms="generateImdViaJms"
-	        	v-on:generate-imd-via-xai="generateImdViaXai"
-	        	v-on:generate-nem12-csv="generateNem12Csv"
-	        	v-on:generate-nem12-asexml="generateNem12AseXML"></delivery-method>
+	        	:config="config" :entries="entries"
+	        	@add-entries="addEntries"
+	        	@update-entry="updateEntry"
+	        	@delete-entry="deleteEntry"></meter-entries>
+	        <delivery-method
+	        	@generate-imd-via-jms="generateImdViaJms"
+	        	@generate-imd-via-xai="generateImdViaXai"
+	        	@generate-nem12-csv="generateNem12Csv"
+	        	@generate-nem12-asexml="generateNem12AseXML"></delivery-method>
 	        	
 	        <generator-status v-if="showGeneratorStatus" 
-	        	v-on:close="closeGeneratorStatus" 
-	        	v-bind:generator="generator"></generator-status>
+	        	:generator="generator"
+	        	@close="closeGeneratorStatus"></generator-status>
 	        	
         </div>
 	</div>
 	<div id="footer">
-		<p>Tool developed by Hamy from Wipro (<a href="mailto:hemant.murthy@energyaustralia.com.au">hemant.murthy@energyaustralia.com.au</a>). Do drop an email for any queries.</p>
+		<p>Tool developed by Hamy(Wipro) &lt;<a href="mailto:hemant.murthy@energyaustralia.com.au">hemant.murthy@energyaustralia.com.au</a>&gt;.</p>
 	</div>
 </body>
 

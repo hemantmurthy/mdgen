@@ -19,7 +19,7 @@ var app = new Vue({
 	data: {
 		config: {}, // Configuration for the application
 		configLoaded: false, // Flag to indicate that configuration is loaded
-		intervalSize: null, // The size of interval data that will be generated
+		intervalSize: 0, // The size of interval data that will be generated
 		intervalLabels: [], // Interval Labels
 		channels: [], // The channel templates
 		entries: [], // The NMIs, Meters and Channels for which data is to be generated
@@ -86,6 +86,12 @@ var app = new Vue({
 				this.entries.push(e);
 			}, this);
 		},
+		updateEntry: function(entry) {
+			this.entries.splice(entry.index, 1, entry.value);
+		},
+		deleteEntry: function(index) {
+			this.entries.splice(index, 1);
+		},
 		generateImdViaJms: function(parms) {
 			invokeAPI("api/generator/xai", parms, this)
 		},
@@ -93,13 +99,23 @@ var app = new Vue({
 			invokeAPI("api/generator/xai", parms, this)
 		},
 		generateNem12Csv: function() {
-			invokeAPI("api/generator/nem12", {}, this)
+			invokeAPI("api/generator/nem12csv", {}, this, function(response) {
+				// If response contains generated data, then download file to client system ...
+				if(response.generatedData) {
+					downloadFile(response.generatedData, "nem12_", ".txt")
+				}
+			});
 		},
 		generateNem12AseXML: function() {
-			invokeAPI("api/generator/nem12", {}, this)
+			invokeAPI("api/generator/nem12asexml", {}, this, function(response) {
+				// If response contains generated data, then download file to client system ...
+				if(response.generatedData) {
+					downloadFile(response.generatedData, "num12_", ".xml");
+				}
+			});
 		},
-		startPollingGeneratorStatus: function() {
-			checkStatus(this);
+		startPollingGeneratorStatus: function(callback) {
+			checkStatus(this, callback);
 		},
 		closeGeneratorStatus: function() {
 			this.generator.status = null;
@@ -131,7 +147,8 @@ var app = new Vue({
 			template: "#manage-channels-template",
 			props: [
 				"config",
-				"channels", 
+				"channels",
+				"intervalSize",
 				"intervalLabels"
 			],
 			data: function() {
@@ -141,25 +158,44 @@ var app = new Vue({
 				};
 			},
 			methods: {
-		        addChannel: function() {
+		        addChannel: function(useProfile) {
 		        	this.error = "";
 		        	
 		        	if(this.id == "") {
-	        			this.error = "Channel ID cannot be empty";
+	        			this.error = "NMI Suffix cannot be empty";
 	        			return;
 		        	}
 		        	
 		        	let newId = this.id.toUpperCase();
 		        	for(let i = 0; i < this.channels.length; ++i)
 		        		if(this.channels[i].nmiSuffix == newId) {
-		        			this.error = "Channel with ID " + newId + " already exists";
+		        			this.error = "NMI Suffix " + newId + " already exists";
 		        			return;
 		        		}
 		        	
-		            // Add a channel and fill values with zeroes
+		            // Add a channel and fill values ...
 		            let intVals = new Array(this.intervalLabels.length);
-		            for(let i = 0; i < intVals.length; ++i)
-		                intVals[i] = { value: "0", quality: "A", valError: false, qualError: false };
+		            
+		            // Check if profile found for suffix (and if not, then for first letter of suffix) ...
+		            let profile = this.config.profiles[newId];
+		            if(!profile)
+		            	profile = this.config.profiles[newId.substring(0, 1)];
+		            
+		            if(useProfile && profile) {
+		            	// If found, then fill values based on profile
+		            	let nita = this.intervalSize / 5; // Number of intervals to add
+		            	let v = 0;
+			            for(let i = 0; i < intVals.length; ++i) {
+			            	v = 0;
+			            	for(let ni = 0; ni < nita; ++ni)
+			            		v += profile.values[i * nita + ni];
+			            	
+			                intVals[i] = { value: v, quality: "A", valError: false, qualError: false };
+			            }
+		            } else {
+			            for(let i = 0; i < intVals.length; ++i) 
+			                intVals[i] = { value: 0, quality: "A", valError: false, qualError: false };
+		            }
 		
 		            
 		            this.$emit("add-channel", {
@@ -197,11 +233,13 @@ var app = new Vue({
 			data: function() {
 				return {
 					showEntryMode: null,
+					indexToEdit: null,
 					viewAllEntriesVisible: false
 				};
 			},
 			methods: {
 				showAddSingleEntry: function() {
+					this.indexToEdit = null;
 					this.showEntryMode = "single";
 				}, 
 				showAddMultipleEntries: function() {
@@ -217,40 +255,57 @@ var app = new Vue({
 					this.showEntryMode = null;
 				},
 				addEntries: function(entries) {
-					this.$emit("add-entries", entries);
 					this.showEntryMode = null;
+					this.$emit("add-entries", entries);
+				},
+				editEntry: function(index) {
+					this.indexToEdit = index;
+					this.showEntryMode = "edit";
+				},
+				deleteEntry: function(index) {
+					this.$emit("delete-entry", index);
+				},
+				updateEntry: function(entry) {
+					this.showEntryMode = null;
+					this.$emit("update-entry", entry);
 				}
 			},
 			components: {
 				"view-all-entries": {
 					template: "#view-all-entries-template",
-					props: ["entries"],
+					props: ["config", "entries"],
 					methods: {
 						close: function() {
 							this.$emit("close");
+						},
+						deleteEntry: function(entryIndex) {
+							this.$emit("delete-entry", entryIndex);
+						},
+						editEntry: function(entryIndex) {
+							this.$emit("edit-entry", entryIndex);
 						}
 					}
 				},
 				"add-single-entry": {
 					template: "#add-single-entry-template",
-					props: ["config"],
+					props: ["config", "mode", "actionLabel", "index", "entries"],
 					data: function() {
 						return {
-							mdp: "",
+							mdp: this.index ? this.entries[this.index].mdp : "",
 							mdpError: null,
-							nmi: "",
+							nmi: this.index != null ? this.entries[this.index].nmi : "",
 							nmiError: null,
-							meterSerialNumber: "",
+							meterSerialNumber: this.index != null ? this.entries[this.index].meterSerialNumber : "",
 							meterSerialNumberError: null,
-							nmiSuffix: "",
+							nmiSuffix: this.index != null ? this.entries[this.index].nmiSuffix : "",
 							nmiSuffixError: null,
-							registerId: "",
+							registerId: this.index != null ? this.entries[this.index].registerId : "",
 							registerIdError: null,
-							startDate: "",
+							startDate: this.index != null ? this.entries[this.index].startDate : "",
 							startDateError: null,
-							endDate: "",
+							endDate: this.index != null ? this.entries[this.index].endDate : "",
 							endDateError: null,
-							transactionId: "",
+							transactionId: this.index != null ? this.entries[this.index].transactionId : "",
 							transactionIdError: null
 						};
 					},
@@ -258,7 +313,7 @@ var app = new Vue({
 						cancel: function() {
 							this.$emit("cancel");
 						},
-						add: function() {
+						performAction: function() {
 							this.mdpError = this.mdp.trim() == "" ? "Select an MDP" : null;
 							this.nmiError = NMI_RE.test(this.nmi.trim()) ? null : "NMI invalid";
 							this.meterSerialNumberError = this.meterSerialNumber.trim() == "" ? "Meter Serial Number is required" : null;
@@ -271,7 +326,7 @@ var app = new Vue({
 								|| this.nmiSuffixError != null
 							) return;
 							
-							let entry = [{
+							let entry = {
 								mdp: this.mdp,
 								nmi: this.nmi,
 								meterSerialNumber: this.meterSerialNumber,
@@ -280,8 +335,14 @@ var app = new Vue({
 								startDate: this.startDate,
 								endDate: this.endDate,
 								transactionId: this.transactionId
-							}];
-							this.$emit("add-entries", entry);
+							};
+							
+							if(this.mode == "edit")
+								this.$emit("update-entry", {index: this.index, value : entry});
+							else {
+								let entries = [entry];
+								this.$emit("add-entries", entries);
+							}
 						}
 						
 					}
@@ -482,7 +543,7 @@ function createBaseRequestObject(data) {
 		ct.reads = [];
 		
 		ch.intervals.forEach(function(int) {
-			ct.reads.push({rd: Number(int.value.trim()), qual: int.quality.trim() });
+			ct.reads.push({rd: Number(int.value.toString().trim()).toFixed(3), qual: int.quality.trim() });
 		});
 		
 		req.channelTemplates.push(ct);
@@ -506,7 +567,7 @@ function createBaseRequestObject(data) {
 }
 
 // Invoke generator API ...
-function invokeAPI(apiUri, additionalParms, vm) {
+function invokeAPI(apiUri, additionalParms, vm, callback) {
 	if(vm.generator.status != null) return "Generator already in progress";
 	
 	vm.generator.id = null;
@@ -537,7 +598,7 @@ function invokeAPI(apiUri, additionalParms, vm) {
 				if(response.id) {
 					vm.generator.id = response.id;
 					vm.generator.status = "Request submitted";
-					vm.startPollingGeneratorStatus();
+					vm.startPollingGeneratorStatus(callback);
 				} else {
 					vm.generator.id = null;
 					vm.generator.status = "Error";
@@ -559,7 +620,7 @@ function invokeAPI(apiUri, additionalParms, vm) {
 }
 
 // Check status of a Generator
-function checkStatus(vm) {
+function checkStatus(vm, callback) {
 	let xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function() {
 		if(this.readyState == 4) {
@@ -576,6 +637,11 @@ function checkStatus(vm) {
 						vm.generator.errorMessage = null;
 						vm.generator.numRecordsToProcess = response.numberOfRecordsToProcess;
 						vm.generator.numRecordsProcessed = response.numberOfRecordsProcessed;
+						
+						// Invoke the callback function if it's provided, passing the response ... 
+						if(typeof callback === "function") {
+							callback(response);
+						}
 					}
 					
 					if(response.status == "ERROR" || response.status == "VALIDATION_ERROR") {
@@ -590,7 +656,7 @@ function checkStatus(vm) {
 						
 						// Only if status is available, and status is RUNNING, re-trigger status check
 						// after a second ...
-						setTimeout(checkStatus, 1000, vm);
+						setTimeout(function() { checkStatus(vm, callback); }, 1000); 
 					}
 				} 
 			} else {
@@ -602,6 +668,25 @@ function checkStatus(vm) {
 	xhr.open("GET", "api/generator/" + vm.generator.id, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
 	xhr.send();
+}
+
+
+function downloadFile(data, fnprefix, fnext) {
+	let blob = new Blob([data], {type : "text/plain"});
+	let link = document.createElement("a");
+	link.href = URL.createObjectURL(blob);
+	let dttm = new Date();
+	let fileName = fnprefix + 
+		String(dttm.getFullYear()).padStart(4, "0") + "-" +
+		String(dttm.getMonth()).padStart(2, "0") + "-" +
+		String(dttm.getDate()).padStart(2, "0") + "-" +
+		String(dttm.getHours()).padStart(2, "0") +
+		String(dttm.getMinutes()).padStart(2, "0") +
+		String(dttm.getSeconds()).padStart(2, "0") +
+		fnext;
+	link.setAttribute("download", fileName);
+	link.click();
+	URL.revokeObjectURL(link.href);
 }
 
 })();

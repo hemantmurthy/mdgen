@@ -7,50 +7,31 @@ import java.util.List;
 import hamy.mdgen.api.generator.GeneratorInput.Read;
 import hamy.mdgen.api.generator.format.NEM12CSVBuilder;
 
-public class NEM12Generator extends Generator {
-	private String mdp;
-	private String overrideMdp;
-	private String nem12FileName; 
-	private ZonedDateTime nem12UpdateDateTime;
-	private String nmi;
-	private String meterSerialNumber;
-	private String nmiSuffix;
-	private String registerId;
-	private String uom;
-	private int intervalSize;
+/**
+ * This Generator generates a NEM12 CSV file based on input.
+ * @author Hamy
+ *
+ */
+public class NEM12CSVGenerator extends Generator {
 
 	private StringBuilder buffer = new StringBuilder();
+	private String generatedData = null;
 	
-	public NEM12Generator(GeneratorInput input) {
+	public NEM12CSVGenerator(GeneratorInput input) {
 		super(input);
 	}
 
 	@Override
 	public void processFile(String mdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
-		this.mdp = mdp;
-		this.nem12FileName = nem12FileName;
-		this.nem12UpdateDateTime = nem12UpdateDateTime;
-		
 		String rec100 = NEM12CSVBuilder.create100Record(nem12UpdateDateTime, mdp, targetParticipant);
 		buffer.append(rec100).append("\n");
-		
-		System.out.println(rec100);
 	}
 
 	@Override
 	public void processRegister(String overrideMdp, String nmi, String nmiConfig, String meterSerialNumber,
 			String nmiSuffix, String registerId, String dataStreamIdentifier, String uom, int intervalSize) {
-		this.overrideMdp = overrideMdp;
-		this.nmi = nmi;
-		this.meterSerialNumber = meterSerialNumber;
-		this.nmiSuffix = nmiSuffix;
-		this.registerId = registerId;
-		this.uom = uom;
-		this.intervalSize = intervalSize;
-		
 		String rec200 = NEM12CSVBuilder.create200Record(overrideMdp, nmi, nmiConfig, meterSerialNumber, nmiSuffix, registerId, dataStreamIdentifier, uom, intervalSize);
 		buffer.append(rec200).append("\n");
-		System.out.println(rec200);
 		
 	}
 
@@ -68,7 +49,6 @@ public class NEM12Generator extends Generator {
 		
 		String rec300 = NEM12CSVBuilder.create300Record(date, reads, readQuality, "", "", null, null);
 		buffer.append(rec300).append("\n");
-		System.out.println(rec300);
 		
 		// Generate 400 records if read quality is V ...
 		if("V".equals(readQuality)) {
@@ -79,7 +59,7 @@ public class NEM12Generator extends Generator {
 					// Generate 400 record for previous block
 					String rec400 = NEM12CSVBuilder.create400Record(startInt, endInt, prevQ, null);
 					buffer.append(rec400).append("\n");
-					System.out.println(rec400);
+					//System.out.println(rec400);
 					
 					startInt = endInt + 1;
 				}
@@ -91,7 +71,6 @@ public class NEM12Generator extends Generator {
 			//Generate 400 record for last block
 			String rec400 = NEM12CSVBuilder.create400Record(startInt, endInt, prevQ, null);
 			buffer.append(rec400).append("\n");
-			System.out.println(rec400);
 		}
 	}
 
@@ -99,6 +78,16 @@ public class NEM12Generator extends Generator {
 	public void processEndOfFile(int numReadsProcessed) {
 		String rec900 = NEM12CSVBuilder.create900Record();
 		buffer.append(rec900);
+		
+		this.generatedData = buffer.toString();
+	}
+	
+	/**
+	 * Get the generated data in NEM12 CSV format.
+	 * @return Generated data in NEM12 format, or null if generator failed, or has not yet completed processing.
+	 */
+	public String getNEM12CSV() {
+		return this.generatedData;
 	}
 
 }

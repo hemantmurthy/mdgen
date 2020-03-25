@@ -24,29 +24,33 @@ public abstract class Generator {
 		this.status = "PENDING";
 	}
 	
-	public void start(String id) {
-		this.status = "STARTING";
-		if(this.thread != null)
-			throw new RuntimeException("Illegal State");
-		
-		if((this.errorMessage = prepare()) != null) {
-			this.status = "VALIDATION_ERROR";
+	public void processSynchronously() {
+		if((Generator.this.errorMessage = prepare()) != null) {
+			Generator.this.status = "VALIDATION_ERROR";
 			return;
 		}
 		
+		Generator.this.status = "RUNNING";
+		try {
+			generate();
+			Generator.this.status = "COMPLETED";
+		} catch(Exception e) {
+			Generator.this.status = "ERROR";
+			Generator.this.errorMessage = e.getMessage();
+			e.printStackTrace();
+		} finally {
+		}
+	}
+	
+	public void processAsynchronously() {
+		if(this.thread != null)
+			throw new RuntimeException("Illegal State");
+		
+		this.status = "STARTING";
 		this.thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				Generator.this.status = "RUNNING";
-				try {
-					generate();
-					Generator.this.status = "COMPLETED";
-				} catch(Exception e) {
-					Generator.this.status = "ERROR";
-					Generator.this.errorMessage = e.getMessage();
-					e.printStackTrace();
-				} finally {
-				}
+				processSynchronously();
 			}
 		});
 		
@@ -64,12 +68,17 @@ public abstract class Generator {
 
 		numReadsToProcess = 0;
 		for(RequestedChannel rc : input.getRequestedChannels()) {
-			String channelId = rc.getNmiSuffix();
+			String nmiSuffix = rc.getNmiSuffix();
 			LocalDate startDate = rc.getStartDate();
 			LocalDate endDate = rc.getEndDate();
 			
-			// Find matching channel in templates ...
-			ChannelTemplate ct = cts.get(channelId);
+			// Find matching suffix in templates ...
+			ChannelTemplate ct = cts.get(nmiSuffix);
+			
+			// If not found, then try finding template for first letter of suffix ...
+			if(ct == null)
+				ct = cts.get(nmiSuffix.substring(0, 1));
+			
 			if(ct != null) {
 				for(LocalDate date = startDate; date.compareTo(endDate) <= 0; date = date.plusDays(1)) {
 					++numReadsToProcess;
@@ -108,8 +117,13 @@ public abstract class Generator {
 			LocalDate endDate = rc.getEndDate();
 			double indexRead = rc.getIndexRead();
 			
-			// Find matching channel in templates ...
+			// Find matching suffix in templates ...
 			ChannelTemplate ct = cts.get(nmiSuffix);
+			
+			// If not found, then try finding template for first letter of suffix ...
+			if(ct == null)
+				ct = cts.get(nmiSuffix.substring(0, 1));
+				
 			if(ct != null) {
 				// Generate data only if matching channel found ...
 				int intervalSize = ct.getIntervalSize();

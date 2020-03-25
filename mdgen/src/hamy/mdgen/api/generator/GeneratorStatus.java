@@ -15,6 +15,7 @@ public class GeneratorStatus {
 	private int numberOfRecordsToProcess;
 	private int numberOfRecordsProcessed;
 	private String errorMessage;
+	private String generatedData;
 
 	public String getId() {
 		return id;
@@ -51,5 +52,11 @@ public class GeneratorStatus {
 	}
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
+	}
+	public String getGeneratedData() {
+		return generatedData;
+	}
+	public void setGeneratedData(String data) {
+		this.generatedData = data;
 	}
 }
