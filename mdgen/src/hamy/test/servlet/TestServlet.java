@@ -26,8 +26,6 @@ public class TestServlet extends HttpServlet {
 		try {
 			Request r = new Request();
 			r.setId("1234");
-			r.addProp("abc");
-			r.addProp("pqr");
 			
 			Map<String, Object> p = new HashMap<>();
 			p.put(JAXBContextProperties.MEDIA_TYPE, "application/json");

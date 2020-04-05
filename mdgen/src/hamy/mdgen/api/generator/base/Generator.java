@@ -1,4 +1,4 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.base;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -6,10 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import hamy.mdgen.api.generator.GeneratorInput.ChannelTemplate;
-import hamy.mdgen.api.generator.GeneratorInput.Read;
-import hamy.mdgen.api.generator.GeneratorInput.RequestedChannel;
+import hamy.mdgen.api.generator.base.GeneratorInput.ChannelTemplate;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.GeneratorInput.RequestedChannel;
 
+/**
+ * The Meter Data Generator. This class is the work-horse of the meter generator
+ * tool. It processes all entries received as input and generates meter data for each entry based on 
+ * templates for each metering channel (also received in the input).<br/><br/>
+ * This class must be subclasses to generate and dispatch generated meter data in a specific format. 
+ * @author Hamy
+ *
+ */
 public abstract class Generator {
 	private GeneratorInput input;
 	private Thread thread;
@@ -88,7 +96,6 @@ public abstract class Generator {
 			}
 		}
 		
-		System.out.println("#### " + numReadsToProcess);
 		return null;
 	}
 	
@@ -98,15 +105,15 @@ public abstract class Generator {
 			cts.put(ct.getNmiSuffix(), ct);
 		
 		// Start processing for a file ...
-		String mdp = input.getMdp();
+		String fileMdp = input.getMdp();
 		String targetParticipant = input.getTargetParticipant();
 		String nem12FileName = input.getNem12FileName();
 		ZonedDateTime nem12UpdateDateTime = input.getNem12UpdateDateTime();
-		processFile(mdp, targetParticipant, nem12FileName, nem12UpdateDateTime);
+		processFile(fileMdp, targetParticipant, nem12FileName, nem12UpdateDateTime);
 		
 		// Process each channel ...
 		for(RequestedChannel rc : input.getRequestedChannels()) {
-			String overrideMdp = rc.getMdp();
+			String requestMdp = rc.getMdp();
 			String nmi = rc.getNmi();
 			String nmiConfig = rc.getNmiSuffix(); // Default nmi config to the nmi suffix
 			String meterSerialNumber = rc.getMeterSerialNumber();
@@ -130,10 +137,13 @@ public abstract class Generator {
 				
 				// Use override UOM if available, else use UOM from template ...
 				String uom = rc.getOverrideUom();
-				if(uom == null) uom = ct.getUom();
+				uom = uom == null || "".equals(uom.trim()) ? ct.getUom() : uom.trim();
+				
+				String mdp = fileMdp;
+				mdp = mdp == null || "".equals(mdp.trim()) ? requestMdp : mdp.trim();
 				
 				// Process the register ...
-				processRegister(overrideMdp == null ? mdp : overrideMdp, nmi, nmiConfig, meterSerialNumber, 
+				processRegister(mdp, nmi, nmiConfig, meterSerialNumber, 
 						nmiSuffix, registerId, dataStreamIdentifier, uom, intervalSize);
 				
 				// Process reads one day at a time ...
@@ -177,16 +187,42 @@ public abstract class Generator {
 	}
 
 	/**
-	 * Start process for one file.
+	 * Start process for one file. This method will be invoked before any other method is invoked,
+	 * and is called at the beginning of processing.
 	 * @param mdp The MDP.
 	 * @param nem12FileName The NEM12 File Name.
 	 * @param nem12UpdateDateTime The Update Datetime of the NEM 12 File.
 	 */
 	public abstract void processFile(String mdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime);
 	
-	
+	/**
+	 * Start processing a single register. This method will be invoked zero or more times after processFile,
+	 * once for each register entry and before any of the reads for the register entry are processed.
+	 * @param mdp
+	 * @param nmi
+	 * @param nmiConfig
+	 * @param meterSerialNumber
+	 * @param nmiSuffix
+	 * @param registerId
+	 * @param dataStreamIdentifier
+	 * @param uom
+	 * @param intervalSize
+	 */
 	public abstract void processRegister(String mdp, String nmi, String nmiConfig, String meterSerialNumber, 
 			String nmiSuffix, String registerId, String dataStreamIdentifier, String uom, int intervalSize);
+	
+	/**
+	 * Process reads for a register for a single day. This method will be called one or more times after each
+	 * call to processRegister for that register, once for each day in the date range.
+	 * @param date
+	 * @param reads
+	 * @param indexRead
+	 */
 	public abstract void processReadsForADay(LocalDate date, List<Read> reads, double indexRead);
+	
+	/**
+	 * Complete generator processing. This method is called at the end, after processing all entries.
+	 * @param numReadsProcessed The number of reads processed.
+	 */
 	public abstract void processEndOfFile(int numReadsProcessed);
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jms-destinations>
+    <destination>
+        <name>MSGASVD4</name>
+        <url>tcp://msgasvd4.domain.internal:61616</url>
+        <username>b2badmin</username>
+        <password>MuSupE2!zu</password>
+        <queues>
+            <queue>
+                <name>ea.nem.b2b.external.mdms.mtrd.in.21</name>
+            </queue>
+        </queues>
+    </destination>
+    <destination>
+        <name>MSGASVD5</name>
+        <url>tcp://msgasvd5.domain.internal:61616</url>
+        <queues>
+            <queue>
+                <name>ea.nem.b2b.external.mdms.mtrd.in.21</name>
+            </queue>
+        </queues>
+    </destination>
+</jms-destinations>

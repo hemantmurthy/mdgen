@@ -1,4 +1,4 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.base;
 
 import java.time.LocalDateTime;
 

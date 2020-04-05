@@ -1,4 +1,4 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.base;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -8,16 +8,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import hamy.mdgen.api.generator.imd.IMDViaXAIGeneratorInput;
 import hamy.mdgen.common.xml.LocalDateAdapter;
 import hamy.mdgen.common.xml.ZonedDateTimeAdapter;
 
-@XmlRootElement(name="input")
+@XmlRootElement(name="generator-input")
+@XmlSeeAlso({IMDViaXAIGeneratorInput.class})
 @XmlAccessorType (XmlAccessType.FIELD)
 public class GeneratorInput {
 	private String mdp;
 	private String targetParticipant;
+	private String targetRole;
 	private String nem12FileName;
 	@XmlJavaTypeAdapter(value = ZonedDateTimeAdapter.class)
 	private ZonedDateTime nem12UpdateDateTime;
@@ -41,6 +45,12 @@ public class GeneratorInput {
 	}
 	public void setTargetParticipant(String targetParticipant) {
 		this.targetParticipant = targetParticipant;
+	}
+	public String getTargetRole() {
+		return targetRole;
+	}
+	public void setTargetRole(String targetRole) {
+		this.targetRole = targetRole;
 	}
 	public String getNem12FileName() {
 		return nem12FileName;

@@ -6,7 +6,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import hamy.mdgen.api.generator.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 
 public class NEM12CSVBuilder {
 	private static String DELIMITER = ",";
@@ -24,7 +24,7 @@ public class NEM12CSVBuilder {
 		return sb.toString();
 	}
 	
-	public static String create200Record(String overrideMdp, String nmi, String nmiConfig, String meterSerialNumber,
+	public static String create200Record(String nmi, String nmiConfig, String meterSerialNumber,
 			String nmiSuffix, String registerId, String dataStreamIdentifier, String uom, int intervalSize) {
 		StringBuilder sb = new StringBuilder()
 				.append("200").append(DELIMITER)

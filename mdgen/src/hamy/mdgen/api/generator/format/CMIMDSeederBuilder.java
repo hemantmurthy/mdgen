@@ -13,7 +13,7 @@ import java.util.Properties;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
-import hamy.mdgen.api.generator.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.ObjectFactory;
 
@@ -55,10 +55,13 @@ public class CMIMDSeederBuilder {
 		
 		imd.setDateTimeTagFormat("xsd:strict");
 		imd.setBo("CM-IMD Seeder");
+		imd.setServiceProviderExternalId("DEFAULTHES");
 		imd.setNmi(nmi);
 		
 		CMIMDSeeder.PreVEE pv = new CMIMDSeeder.PreVEE();
 		pv.setExternalId(null);
+		pv.setImdType(of.createCMIMDSeederPreVEEImdType("D1IL"));
+		
 		pv.setMdp(mdp);
 		pv.setDvcIdN(nmi + "_" + meterSerialNumber);
 		pv.setMcIdN(nmiSuffix);

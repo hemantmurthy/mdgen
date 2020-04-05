@@ -19,8 +19,6 @@ public class TestResource {
 		System.out.println("GET");
 		EnhancedRequest r = new EnhancedRequest();
 		r.setId("8888");
-		r.addProp("def");
-		r.addProp("abc");
 		r.setAdditionalValue("Blah Blah Blah");
 		return r;
 	}

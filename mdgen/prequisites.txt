@@ -1,0 +1,6 @@
+
+Place all XSD files for ASE XML (version r38) into a folder
+C:\...\mdgen\src>xjc -p hamy.mdgen.api.generator.format.aseXML folder_path\aseXML_r38.xsd
+
+Java components to invoke XAI Service to create IMD Seeder
+C:\...\mdgen\src>wsimport -Xnocompile -p hamy.mdgen.api.generator.format.xai.CMIMDSeeder -keep -b CMIMDSeeder.xjb http://10.175.121.154:7004//ouaf/XAIApp/xaiserver/CM-IMDSeeder?WSDL

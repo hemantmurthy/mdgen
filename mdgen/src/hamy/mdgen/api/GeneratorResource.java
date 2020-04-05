@@ -10,30 +10,35 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import hamy.mdgen.api.generator.Generator;
-import hamy.mdgen.api.generator.GeneratorInput;
-import hamy.mdgen.api.generator.GeneratorList;
-import hamy.mdgen.api.generator.GeneratorOutput;
-import hamy.mdgen.api.generator.GeneratorRegistrar;
-import hamy.mdgen.api.generator.GeneratorStatus;
-import hamy.mdgen.api.generator.IMDViaXAIGenerator;
-import hamy.mdgen.api.generator.NEM12AseXMLGenerator;
-import hamy.mdgen.api.generator.NEM12CSVGenerator;
+import hamy.mdgen.api.generator.base.Generator;
+import hamy.mdgen.api.generator.base.GeneratorError;
+import hamy.mdgen.api.generator.base.GeneratorInput;
+import hamy.mdgen.api.generator.base.GeneratorList;
+import hamy.mdgen.api.generator.base.GeneratorOutput;
+import hamy.mdgen.api.generator.base.GeneratorRegistrar;
+import hamy.mdgen.api.generator.base.GeneratorStatus;
+import hamy.mdgen.api.generator.imd.IMDViaJMSGenerator;
+import hamy.mdgen.api.generator.imd.IMDViaJMSGeneratorInput;
+import hamy.mdgen.api.generator.imd.IMDViaXAIGenerator;
+import hamy.mdgen.api.generator.imd.IMDViaXAIGeneratorInput;
+import hamy.mdgen.api.generator.nem12.NEM12AseXMLGenerator;
+import hamy.mdgen.api.generator.nem12.NEM12CSVGenerator;
 
 @Path("/generator")
 public class GeneratorResource {
 	@POST
 	@Path("/xai")
 	@Produces(MediaType.APPLICATION_JSON)
-	public GeneratorOutput createXaiGenerator(GeneratorInput input) {
-		IMDViaXAIGenerator generator = new IMDViaXAIGenerator(input);
+	public GeneratorOutput createXAIGenerator(IMDViaXAIGeneratorInput input) {
+		IMDViaXAIGenerator generator = new IMDViaXAIGenerator(input, 10);
 		
 		GeneratorOutput output = new GeneratorOutput();
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		System.out.println("XAI Generator created. ID: " + id);
+		System.out.println("XAI Generator created. ID: " + id + ", XAI Server: " + input.getServer());
 
 		try {
 			generator.processAsynchronously();
@@ -43,6 +48,38 @@ public class GeneratorResource {
 		}
 		
 		return output;
+	}
+	
+	@POST
+	@Path("/jms")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response createJMSGenerator(IMDViaJMSGeneratorInput input) {
+		IMDViaJMSGenerator generator = null;
+		try {
+			generator = new IMDViaJMSGenerator(input);
+		} catch(Exception e) {
+			GeneratorError error = new GeneratorError();
+			error.setErrorMessage(e.getMessage());
+			error.setInput(input);
+			return Response.status(Response.Status.OK).entity(error).build();
+		}
+		
+		GeneratorOutput output = new GeneratorOutput();
+		output.setInput(input);
+
+		String id = GeneratorRegistrar.add(generator);
+		System.out.println("JMS Generator created. ID: " + id + ", JMS Server: " + input.getServer());
+
+		try {
+			generator.processAsynchronously();
+			output.setId(id);
+		} catch(Exception e) {
+			GeneratorRegistrar.remove(id);
+		}
+		
+		return Response
+				.status(Response.Status.OK)
+				.entity(output).build();
 	}
 	
 	@POST

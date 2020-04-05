@@ -1,4 +1,4 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.nem12;
 
 import java.io.StringWriter;
 import java.time.LocalDate;
@@ -8,7 +8,8 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import hamy.mdgen.api.generator.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.GeneratorInput;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 import hamy.mdgen.api.generator.format.AseXMLJAXBContext;
 import hamy.mdgen.api.generator.format.AseXMLNEM12Builder;
 

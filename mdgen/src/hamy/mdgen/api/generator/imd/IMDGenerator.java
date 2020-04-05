@@ -1,4 +1,4 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.imd;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -7,16 +7,18 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import hamy.mdgen.api.generator.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.Generator;
+import hamy.mdgen.api.generator.base.GeneratorInput;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 import hamy.mdgen.api.generator.format.CMIMDSeederBuilder;
 import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
-import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
+import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;;
 
-public class IMDViaXAIGenerator extends Generator {
-	private String mdp;
-	private String overrideMdp;
+public class IMDGenerator extends Generator {
+	private String fileMdp;
 	private String nem12FileName; 
 	private ZonedDateTime nem12UpdateDateTime;
+	private String mdp;
 	private String nmi;
 	private String meterSerialNumber;
 	private String nmiSuffix;
@@ -24,13 +26,13 @@ public class IMDViaXAIGenerator extends Generator {
 	private String uom;
 	private int intervalSize;
 	
-	public IMDViaXAIGenerator(GeneratorInput input) {
+	public IMDGenerator(GeneratorInput input) {
 		super(input);
 	}
 	
 	@Override
-	public void processFile(String mdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
-		this.mdp = mdp;
+	public void processFile(String fileMdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
+		this.fileMdp = fileMdp;
 		this.nem12FileName = nem12FileName;
 		this.nem12UpdateDateTime = nem12UpdateDateTime;
 		
@@ -38,9 +40,9 @@ public class IMDViaXAIGenerator extends Generator {
 	}
 
 	@Override
-	public void processRegister(String overrideMdp, String nmi, String nmiConfig, String meterSerialNumber, 
+	public void processRegister(String mdp, String nmi, String nmiConfig, String meterSerialNumber, 
 			String nmiSuffix, String registerId, String dataStreamIdentifier, String uom, int intervalSize) {
-		this.overrideMdp = overrideMdp;
+		this.mdp = mdp == null || "".equals(mdp.trim()) ? null : mdp.trim();
 		this.nmi = nmi;
 		this.meterSerialNumber = meterSerialNumber;
 		this.nmiSuffix = nmiSuffix;
@@ -53,10 +55,14 @@ public class IMDViaXAIGenerator extends Generator {
 
 	@Override
 	public void processReadsForADay(LocalDate date, List<Read> reads, double indexRead) {
-		CMIMDSeeder imd = CMIMDSeederBuilder.build(overrideMdp == null ? mdp : overrideMdp, nem12FileName, 
+		CMIMDSeeder imd = CMIMDSeederBuilder.build(mdp == null ? fileMdp : mdp, nem12FileName, 
 				nem12UpdateDateTime, nmi, meterSerialNumber, nmiSuffix, registerId, uom, intervalSize, 
 				date, date.plusDays(1), reads, indexRead);
 		
+		dispatchIMD(imd);
+	}
+	
+	protected void dispatchIMD(CMIMDSeeder imd) {
 		try {
 			Marshaller mar = CMIMDSeederJAXBContext.createMarshaller();
 			System.out.println("\nOutput");
@@ -64,7 +70,6 @@ public class IMDViaXAIGenerator extends Generator {
 		} catch (JAXBException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	@Override

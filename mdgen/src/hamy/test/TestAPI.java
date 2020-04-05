@@ -18,8 +18,6 @@ public class TestAPI {
 		
 		Request r = new Request();
 		r.setId("AAAA");
-		r.addProp("xxx");
-		r.addProp("yyy");
 		Response res = builder.post(Entity.json(r));
 		System.out.println("Status: " + res.getStatus() + ", Response: " + res.readEntity(String.class));
 	}

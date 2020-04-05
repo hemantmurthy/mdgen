@@ -1,0 +1,10 @@
+{
+	"type": "enhancedRequest",
+	"id": "12345",
+	"props": [
+		{ "name": "Hamy" },
+		{ "name": "Simmi" },
+		{ "name": "Billu" }
+	],
+	"additionalValue": "Some extra values"
+}

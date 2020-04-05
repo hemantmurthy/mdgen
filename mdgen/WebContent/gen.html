@@ -107,6 +107,7 @@
 	<script type="text/x-template" id="view-all-entries-template">
 	<modal-popup>	
 		<h2>List of Entries</h2>
+		<div>
 		<p>The table below lists all entries added so far. Number of entries is {{entries.length}}</p>
 		<table>
 			<thead>
@@ -122,7 +123,7 @@
 					<th>Action</th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody v-if="entries.length > 0">
 				<tr v-for="(e, ei) in entries">
 					<td>{{e.mdp}}</td>
 					<td>{{e.nmi}}</td>
@@ -134,8 +135,14 @@
 					<td>{{e.transactionId}}</td>
 					<td><button @click="editEntry(ei)">Edit</button><button @click="deleteEntry(ei)">Del</button></td>
 				</tr>
-			</tbody>		
+			</tbody>	
+			<tbody v-else>
+				<tr>
+					<td colspan="9">It's rather empty in here right now, isn't it?</td>
+				</tr>
+			</tbody>	
 		</table>
+		</div>
 		<div class="actions">
 			<button @click="close">Close</button>
 		</div>
@@ -144,7 +151,7 @@
 	
 	<script type="text/x-template" id="add-single-entry-template">
 	<modal-popup>	
-		<h3>{{actionLabel}} a Single Entry</h3>
+		<h2>{{actionLabel}} a Single Entry</h2>
 		<div :class="{ error: mdpError }">
 			<span class="message">{{mdpError}}</span>
 			<label>MDP</label>
@@ -167,22 +174,30 @@
 			<label>NMI Suffix</label>
 			<input type="text" v-model="nmiSuffix">
 		</div>
-		<div>
+		<div :class="{ error: registerIdError }">
 			<span class="message">{{registerIdError}}</span>
 			<label>Register ID</label>
 			<input type="text" v-model="registerId">
 		</div>
-		<div>
+		<div :class="{ error: startDateError }">
 			<span class="message">{{startDateError}}</span>
 			<label>Start Date</label>
 			<input type="date" v-model="startDate">
 		</div>
-		<div>
+		<div :class="{ error: endDateError }">
 			<span class="message">{{endDateError}}</span>
 			<label>End Date</label>
 			<input type="date" v-model="endDate">
 		</div>
-		<div>
+		<h4>Optional values</h4>
+		<div :class="{ error: overrideUomError }">
+			<span class="message">{{overrideUomError}}</span>
+			<label>Override UoM</label>
+			<select v-model="overrideUom">
+				<option v-for="uom in config.uoms" :value="uom">{{uom}}</option>
+			</select>
+		</div>
+		<div :class="{ error: transactionIdError }">
 			<span class="message">{{transactionIdError}}</span>
 			<label>PMDR / VMDR Transaction ID</label>
 			<input type="text" v-model="transactionId">
@@ -196,7 +211,7 @@
 
 	<script type="text/x-template" id="add-multiple-entries-template">
 	<modal-popup>
-		<h3>Add Multiple Entries</h3>
+		<h2>Add Multiple Entries</h2>
 		<div :class="{ error: mdpError }">
 			<span class="message">{{mdpError}}</span>
 			<label>MDP</label>
@@ -205,14 +220,15 @@
 			</select>
 		</div>
 		<p>Provide multiple entries in the text box below. Provide one entry per line with comma-separated values. Each entry should be in the format shown below</p>
-		<p><em>NMI, Meter Serial Number, NMI Suffix, Register ID (optional), Start Date, End Date</em></p>
+		<p><em>[ MDP, ] NMI, Meter Serial Number, NMI Suffix, Register ID (blank allowed), Start Date, End Date [ , override UoM ]</em></p>
 		<p>Example<br/><code>
 		6123456789, MTR001, E1, E1, 2019-03-01, 2019-05-30<br/>
-		6123456789, MTR001, B1, B1, 2019-03-01, 2019-05-30<br/>
-		EQQQ908399, MTR001, E1, ,  2019-03-01, 2019-05-30
+		EQQQ908399, MTR001, E1, ,  2019-03-01, 2019-05-30<br/>
+		ACTIVMDP, 5403949300, EL23992, B1, B1, 2019-03-01, 2019-05-30, KVARH<br/>
 		</code></p>
-		<div>
-			<textarea v-model="entriesText" cols="80" rows="15"></textarea>
+		<div :class="{ error: entriesTextError }">
+			<span class="message">{{entriesTextError}}</span>
+			<textarea v-model="entriesText" cols="80" rows="10"></textarea>
 		</div>
 		<div class="actions">
 			<button @click="add">Add</button><button @click="cancel">Cancel</button>
@@ -229,13 +245,15 @@
 	<modal-popup v-if="showDeliveryMethods">	
 		<h3>Select a Delivery Method</h3>
 		<div class="tabs">
-			<button v-for="(config, method) in deliveryMethods" 
+			<button v-for="(tab, method) in deliveryMethods" 
 				@click="select(method)"
 				:class="{ selected: selectedMethod == method}">
-				{{config.label}}
+				{{tab.label}}
 			</button>
 		</div>
-		<component :is="deliveryMethodComponent" 
+		<component :is="deliveryMethodComponent"
+			:config="config"
+			:entries="entries" 
 			@cancel="cancel"
 			@generate-imd-via-jms="generateImdViaJms"
 			@generate-imd-via-xai="generateImdViaXai"
@@ -248,19 +266,37 @@
 	
 	<script type="text/x-template" id="imd-via-jms-template">
 	<div class="tab-content">
-		<p>Select the MDM Server to send IMDs to below and click the Generate button</p>
+		<div class="tab-body">
+		<p>Select the JMS Server to send IMDs to below and click the Generate button</p>
 		<div>
-			<label>Select a JMS Server</label>
+			<label>JMS Server</label>
 			<select v-model="server">
-				<option v-for="(config, server) in servers" :value="server">{{config.name}}</option>
+				<option value="">Select a server below</option>
+				<option v-for="(config, server) in servers" :value="server">{{server}}</option>
 			</select>
 		</div>
+		<table class="server">
+			<tbody>
+				<tr>
+					<th>Server URL</th>
+					<td>{{serverUrl}}</td>
+				</tr>
+				<tr>
+					<th>Queues</th>
+					<td>
+						<div v-for="q in serverQueues">{{q}}</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 		<div>
-			<span class="label">Server:</span><span>{{serverHost}}</span>
+			<label>User Name</label>
+			<input type="text" v-model="jmsUsername" autocomplete="off">
 		</div>
 		<div>
-			<span class="label">Queues:</span>
-			<div v-for="q in serverQueues">{{q.name}}</div>
+			<label>Password</label>
+			<input type="password" v-model="jmsPassword" autocomplete="off">
+		</div>
 		</div>
 		<div class="actions">
 			<button @click="generate">Generate</button>
@@ -271,15 +307,31 @@
 
 	<script type="text/x-template" id="imd-via-xai-template">
 	<div class="tab-content">
+		<div class="tab-body">
 		<p>Select the MDM Server to send IMDs to below and click the Generate button</p>
 		<div>
-			<label>Select a XAI Server</label>
-			<select>
-				<option value="DEV">DEV</option>
-				<option value="ST">ST</option>
-				<option value="SIT">SIT</option>
-				<option value="UAT">UAT</option>
+			<label>MDM Server</label>
+			<select v-model="server">
+				<option value="">Select a server below</option>
+				<option v-for="(config, server) in servers" :value="server">{{server}}</option>
 			</select>
+		</div>
+		<table class="server">
+			<tbody>
+				<tr>
+					<th>Server URL</th>
+					<td>{{serverUrl}}</td>
+				</tr>
+			</tbody>
+		</table>
+		<div>
+			<label>User Name</label>
+			<input type="text" v-model="xaiUsername" autocomplete="off">
+		</div>
+		<div>
+			<label>Password</label>
+			<input type="password" v-model="xaiPassword" autocomplete="off">
+		</div>
 		</div>
 		<div class="actions">
 			<button @click="generate">Generate</button>
@@ -290,12 +342,32 @@
 
 	<script type="text/x-template" id="nem12-template">
 	<div class="tab-content">
-		<p>Download a NEL12 file. Select the format of NEM12 file below</p>
+		<div class="tab-body">
+		<p>Download a NEL12 file. Enter details below and select the format of NEM12 to download</p>
 		<div>
-			<button @click="downloadNem12">NEM12 CSV</button>
-			<button @click="downloadNem12AseXML">NEM12 aseXML</button>
+			<label>MDP</label><inp
+			<select v-model="mdp" @change="mdpChanged">
+				<option v-for="mdp in config.mdps" :value="mdp">{{mdp}}</option>
+			</select>
+		</div>
+		<div>
+			<label>To Role</label><inp
+			<select v-model="targetRole">
+				<option v-for="role in config.participantRoles" :value="role">{{role}}</option>
+			</select>
+		</div>
+		<div>
+			<label>To Participant</label><inp
+			<input type="text" v-model="targetParticipant">
+		</div>
+		<div>
+			<label>NEM12 File Name</label><inp
+			<input type="text" v-model="nem12FileName">
+		</div>
 		</div>
 		<div class="actions">
+			<button @click="downloadNem12">NEM12 CSV</button>
+			<button @click="downloadNem12AseXML">NEM12 aseXML</button>
 			<button @click="cancel">Cancel</button>
 		</div>
 	</div>
@@ -304,7 +376,12 @@
 	<script type="text/x-template" id="generator-status-template">
 	<modal-popup container-class="generator-status">	
 		<h2>Generator Status</h2>
-		<div>
+		<div style="float: left">
+		<div class="icon">
+			<img v-if="generator.status == 'In Progress' || generator.status == 'Building Request'" src="img/working.gif"></img>
+			<img v-else src="img/completed.gif"></img>
+		</div>
+		<div class="body">
 			<div>
 				<span class="label">Status</span><span>{{generator.status}}</span>
 			</div>
@@ -318,8 +395,9 @@
 				<span class="label">Num Records Processed</span><span>{{generator.numRecordsProcessed}} out of {{generator.numRecordsToProcess}}</span>
 			</div>
 		</div>
+		</div>
 		<div class="actions">
-			<button @click="close" v-if="generator.status == 'Completed' || generator.status == 'Error'">Close</button>
+			<button @click="close" v-show="generator.status == 'Completed' || generator.status == 'Error'">Close</button>
 		</div>
 	</modal-popup>
 	</script>
@@ -345,6 +423,8 @@
 	        	@update-entry="updateEntry"
 	        	@delete-entry="deleteEntry"></meter-entries>
 	        <delivery-method
+	        	:config="config"
+	        	:entries="entries"
 	        	@generate-imd-via-jms="generateImdViaJms"
 	        	@generate-imd-via-xai="generateImdViaXai"
 	        	@generate-nem12-csv="generateNem12Csv"
@@ -357,7 +437,7 @@
         </div>
 	</div>
 	<div id="footer">
-		<p>Tool developed by Hamy(Wipro) &lt;<a href="mailto:hemant.murthy@energyaustralia.com.au">hemant.murthy@energyaustralia.com.au</a>&gt;.</p>
+		<p>Tool developed by Hamy (Wipro Technologies) &lt;<a href="mailto:hemant.murthy@energyaustralia.com.au">hemant.murthy@energyaustralia.com.au</a>&gt;.</p>
 	</div>
 </body>
 

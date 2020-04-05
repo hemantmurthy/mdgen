@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xai-destinations>
+    <destination>
+        <name>DEV</name>
+        <url>http://10.175.121.154:7004//ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+        <name>ST</name>
+        <url>http://10.175.102.74:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+        <name>SIT</name>
+        <url>http://10.175.102.67:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>SVT</name>
+    	<url>http://10.175.102.130:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>BAT</name>
+    	<url>http://10.175.102.98:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+</xai-destinations>

@@ -1,10 +1,12 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.nem12;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import hamy.mdgen.api.generator.GeneratorInput.Read;
+import hamy.mdgen.api.generator.base.Generator;
+import hamy.mdgen.api.generator.base.GeneratorInput;
+import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 import hamy.mdgen.api.generator.format.NEM12CSVBuilder;
 
 /**
@@ -28,9 +30,9 @@ public class NEM12CSVGenerator extends Generator {
 	}
 
 	@Override
-	public void processRegister(String overrideMdp, String nmi, String nmiConfig, String meterSerialNumber,
+	public void processRegister(String mdp, String nmi, String nmiConfig, String meterSerialNumber,
 			String nmiSuffix, String registerId, String dataStreamIdentifier, String uom, int intervalSize) {
-		String rec200 = NEM12CSVBuilder.create200Record(overrideMdp, nmi, nmiConfig, meterSerialNumber, nmiSuffix, registerId, dataStreamIdentifier, uom, intervalSize);
+		String rec200 = NEM12CSVBuilder.create200Record(nmi, nmiConfig, meterSerialNumber, nmiSuffix, registerId, dataStreamIdentifier, uom, intervalSize);
 		buffer.append(rec200).append("\n");
 		
 	}

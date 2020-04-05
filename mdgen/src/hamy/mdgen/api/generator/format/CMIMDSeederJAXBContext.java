@@ -13,7 +13,7 @@ public class CMIMDSeederJAXBContext {
 		try {
 			jaxbContext = JAXBContext.newInstance(CMIMDSeeder.class);
 		} catch (JAXBException e) {
-			throw new RuntimeException("Unable to create JAXBContext", e);
+			throw new RuntimeException("Unable to create JAXBContext for CMIMDSeeder", e);
 		}
 	}
 	

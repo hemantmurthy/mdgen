@@ -5,18 +5,6 @@
 		{ "size": 30, "label": "30 mins" }
 	],
 	
-	"nmiSuffixes": [
-		"E1",
-		"E2",
-		"E3",
-		"E4",
-		"E5",
-		"B1",
-		"B2",
-		"B3",
-		"B4"
-	],
-	
 	"uoms": [
 		"KWH", "WH", "KW", "W", "KVARH", "VARH", "KVAR", "VAR", "V"
 	],
@@ -124,6 +112,13 @@
 		"S73", 
 		"S74", 
 		"S75"
+	],
+	
+	"participantRoles": [
+		"FRMP",
+		"LR",
+		"MDP",
+		"LNSP"
 	],
 	
 	"frmps": [

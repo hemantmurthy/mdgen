@@ -1,8 +1,8 @@
-package hamy.mdgen.api.generator;
+package hamy.mdgen.api.generator.base;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="generator")
+@XmlRootElement(name="generator-output")
 public class GeneratorOutput {
 	private String id;
 	private String status;

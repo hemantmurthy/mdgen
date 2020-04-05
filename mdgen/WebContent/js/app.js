@@ -1,10 +1,19 @@
+/**
+ * The UI model and logic for the meter data generator tool.
+ * @author Hamy (Wipro Technologies)
+ */
+
 (function() {
-	
+
+// A bunch of regular expressions used to validate input ...
 let DECIMAL_RE = /^(\d*\.)?\d+$/;	
-let NMI_RE = /^[A-Za-z0-9]{10}$/;
-let NMI_SUFFIX_RE = /^[A-HJ-MP-WYZ]{1}[0-9A-HJ-NP-Z]{1}$/;
-let MTR_SRNO_RE = /^[A-Za-z0-9]+$/;
-let REG_ID_RE = /^[A-Za-z0-9]{1,2}$/;
+let NMI_RE = /^[a-z0-9]{10}$/i;
+let NMI_SUFFIX_RE = /^[a-hj-np-z]{1}[0-9a-hj-np-z]{1}$/i;
+let MTR_SRNO_RE = /^[a-z0-9]+$/i;
+let REG_ID_RE = /^[a-z0-9]{1,2}$/i;
+let DATE_RE = /^\d{4}\-\d{2}\-\d{2}$/;
+let MULT_ENTRY_LINE_RE = /^\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[0-9-]*\s*,\s*[0-9-]*\s*(,\s*[a-z]*\s*){0,1}$/i;
+let MULT_ENTRY_LINE_WITH_MDP_RE = /^\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[a-z0-9]*\s*,\s*[0-9-]*\s*,\s*[0-9-]*\s*(,\s*[a-z]*\s*){0,1}$/i;
 
 // Add common components ...
 // Modal Window ...
@@ -33,23 +42,7 @@ var app = new Vue({
 		}
 	},
 	created: function() {
-		// Load configuration for this application.
-		// Configuration is stored in a JSON file. This JSON object is loaded into the vm.config
-		
-		let vm = this;
-		
-		// Load configuration ...
-		let configLoader = new XMLHttpRequest();
-		configLoader.onreadystatechange = function() {
-			if(this.readyState == 4) {
-				if(this.status == 200) {
-					vm.config = JSON.parse(this.responseText);
-					vm.configLoaded = true; 
-				}
-			}
-		};
-		configLoader.open("GET", "js/config.json", true);
-		configLoader.send();
+		loadConfig(this);
 	},
 	methods: {
 		setSize: function(size) {
@@ -93,24 +86,24 @@ var app = new Vue({
 			this.entries.splice(index, 1);
 		},
 		generateImdViaJms: function(parms) {
-			invokeAPI("api/generator/xai", parms, this)
+			invokeAPI("api/generator/jms", parms, this)
 		},
 		generateImdViaXai: function(parms) {
 			invokeAPI("api/generator/xai", parms, this)
 		},
-		generateNem12Csv: function() {
-			invokeAPI("api/generator/nem12csv", {}, this, function(response) {
+		generateNem12Csv: function(parms) {
+			invokeAPI("api/generator/nem12csv", parms, this, function(response) {
 				// If response contains generated data, then download file to client system ...
 				if(response.generatedData) {
-					downloadFile(response.generatedData, "nem12_", ".txt")
+					downloadFile(response.generatedData, parms.nem12FileName + ".txt")
 				}
 			});
 		},
-		generateNem12AseXML: function() {
-			invokeAPI("api/generator/nem12asexml", {}, this, function(response) {
+		generateNem12AseXML: function(parms) {
+			invokeAPI("api/generator/nem12asexml", parms, this, function(response) {
 				// If response contains generated data, then download file to client system ...
 				if(response.generatedData) {
-					downloadFile(response.generatedData, "num12_", ".xml");
+					downloadFile(response.generatedData, parms.nem12FileName + ".xml");
 				}
 			});
 		},
@@ -291,7 +284,7 @@ var app = new Vue({
 					props: ["config", "mode", "actionLabel", "index", "entries"],
 					data: function() {
 						return {
-							mdp: this.index ? this.entries[this.index].mdp : "",
+							mdp: this.index != null ? this.entries[this.index].mdp : "",
 							mdpError: null,
 							nmi: this.index != null ? this.entries[this.index].nmi : "",
 							nmiError: null,
@@ -301,11 +294,13 @@ var app = new Vue({
 							nmiSuffixError: null,
 							registerId: this.index != null ? this.entries[this.index].registerId : "",
 							registerIdError: null,
-							startDate: this.index != null ? this.entries[this.index].startDate : "",
+							startDate: this.index != null ? this.entries[this.index].startDate.trim() : "",
 							startDateError: null,
-							endDate: this.index != null ? this.entries[this.index].endDate : "",
+							endDate: this.index != null ? this.entries[this.index].endDate.trim() : "",
 							endDateError: null,
-							transactionId: this.index != null ? this.entries[this.index].transactionId : "",
+							overrideUom: this.index != null && this.entries[this.index].overrideUom != null ? this.entries[this.index].overrideUom.trim() : "",
+							overrideUomError: null,
+							transactionId: this.index != null && this.entries[this.index].transactionId != null  ? this.entries[this.index].transactionId.trim() : "",
 							transactionIdError: null
 						};
 					},
@@ -319,21 +314,55 @@ var app = new Vue({
 							this.meterSerialNumberError = this.meterSerialNumber.trim() == "" ? "Meter Serial Number is required" : null;
 							this.nmiSuffixError = this.nmiSuffix.trim() == "" ? "NMI Suffix is required" :
 								NMI_SUFFIX_RE.test(this.nmiSuffix.trim().toUpperCase()) ? null : "NMI Suffix is invalid";
+							this.registerIdError = this.registerId.trim() == "" || REG_ID_RE.test(this.registerId.trim()) ? null : "Register ID is invalid"; 
+
+							this.startDateError = null;
+							let sd = null;
+							let ed = null;
+							if(this.startDate.trim() == "") 
+								this.startDateError = "Date is required";
+							else if(!DATE_RE.test(this.startDate.trim()))
+								this.startDateError = "Date is invalid";
+							else try {
+								sd = new Date(this.startDate.substring(0, 4), this.startDate.substring(5, 7), this.startDate.substring(8, 10));
+							} catch(err) {
+								this.startDateError = "Date is invalid";
+							}
+							
+							this.endDateError = null;
+							if(this.endDate.trim() == "") 
+								this.endDateError = "Date is required";
+							else if(!DATE_RE.test(this.endDate.trim()))
+								this.endDateError = "Date is invalid";
+							else try {
+								ed = new Date(this.endDate.substring(0, 4), this.endDate.substring(5, 7), this.endDate.substring(8, 10));
+							} catch(err) {
+								this.endDateError = "Date is invalid";
+							}
+							
+							if(this.startDateError == null && this.endDateError == null && ed < sd)
+								this.endDateError = "End Date must be on or after Start Date";
 							
 							if(this.mdpError != null
 								|| this.nmiError != null
 								|| this.meterSerialNumberError != null
 								|| this.nmiSuffixError != null
+								|| this.registerIdError != null
+								|| this.startDateError != null
+								|| this.endDateError != null
+								|| this.overrideUomError != null
+								|| this.transactionIdError != null
 							) return;
 							
 							let entry = {
 								mdp: this.mdp,
-								nmi: this.nmi,
-								meterSerialNumber: this.meterSerialNumber,
-								nmiSuffix:this.nmiSuffix,
-								registerId: this.registerId,
+								nmi: this.nmi.toUpperCase(),
+								meterSerialNumber: this.meterSerialNumber.toUpperCase(),
+								nmiSuffix:this.nmiSuffix.toUpperCase(),
+								registerId: this.registerId.toUpperCase(),
 								startDate: this.startDate,
 								endDate: this.endDate,
+								overrideUom: this.overrideUom,
 								transactionId: this.transactionId
 							};
 							
@@ -353,7 +382,9 @@ var app = new Vue({
 					data: function() {
 						return {
 							mdp: "",
-							entriesText: ""
+							mdpError: null,
+							entriesText: "",
+							entriesTextError: null
 						};
 					},
 					methods: {
@@ -361,23 +392,124 @@ var app = new Vue({
 							this.$emit("cancel");
 						},
 						add: function() {
+							this.entriesTextError = null;
+							if(this.entriesText.trim() == "") {
+								this.entriesTextError = "Oye!! Nothing to add here my friend!"
+								return;
+							}
+							
 							// Split entries text by newline
 							let entries = [];
-							let lines = this.entriesText.split(/\r?\n/g);
+							let lines = this.entriesText.trim().split(/\r?\n/g);
 							
-							lines.forEach(function(l) {
-								// Retrieve fields from each line (comma-separated) ...
-								let v = l.split(",");
-								entries.push({
-									mdp: this.mdp,
-									nmi: v[0],
-									meterSerialNumber: v[1],
-									nmiSuffix: v[2],
-									registerId: v[3],
-									startDate: v[4],
-									endDate: v[5]
-								});
-							}, this);
+							for(let i = 0; i < lines.length; ++i) {
+								let l = lines[i];
+								if(l.trim() == "") continue; // Skip blank lines
+								
+								let lmdp = "";
+								let lnmi = "";
+								let lmeterSerialNumber = "";
+								let lnmiSuffix = "";
+								let lregisterId = "";
+								let lstartDate = "";
+								let lendDate = "";
+								let loverrideUom = "";
+								
+								if(MULT_ENTRY_LINE_RE.test(l)) {
+									// Retrieve fields from each line (comma-separated) ...
+									let v = l.trim().split(",");
+									lmdp = this.mdp;
+									lnmi = v[0].trim();
+									lmeterSerialNumber = v[1].trim();
+									lnmiSuffix = v[2].trim();
+									lregisterId = v[3].trim();
+									lstartDate = v[4].trim();
+									lendDate = v[5].trim();
+									if(v[6] != null) loverrideUom = v[6].trim();
+								} else if(MULT_ENTRY_LINE_WITH_MDP_RE.test(l)) {
+									// Retrieve fields from each line (comma-separated) ...
+									let v = l.trim().split(",");
+									lmdp = v[0].trim();
+									lnmi = v[1].trim();
+									lmeterSerialNumber = v[2].trim();
+									lnmiSuffix = v[3].trim();
+									lregisterId = v[4].trim();
+									lstartDate = v[5].trim();
+									lendDate = v[6].trim();
+									if(v[7] != null) loverrideUom = v[7].trim();
+								} else {
+									this.entriesTextError = "Entry on line " + (i  + 1) + " is of the wrong format";
+									break;
+								}
+								
+								if(!NMI_RE.test(lnmi)) {
+									this.entriesTextError = "NMI specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+
+								if(!MTR_SRNO_RE.test(lmeterSerialNumber)) {
+									this.entriesTextError = "Meter Serial Number specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								
+								if(!NMI_SUFFIX_RE.test(lnmiSuffix)) {
+									this.entriesTextError = "NMI Suffix specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								
+								if(lregisterId != "" && !REG_ID_RE.test(lregisterId)) {
+									this.entriesTextError = "Register ID specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								
+								let sd = null;
+								let ed = null;
+								if(!DATE_RE.test(lstartDate)) {
+									this.entriesTextError = "Start Date specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								else try {
+									sd = new Date(lstartDate.substring(0, 4), lstartDate.substring(5, 7), lstartDate.substring(8, 10));
+								} catch(err) {
+									this.entriesTextError = "Start Date specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								
+								if(!DATE_RE.test(lendDate)) {
+									this.entriesTextError = "End Date specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								else try {
+									ed = new Date(lendDate.substring(0, 4), lendDate.substring(5, 7), lendDate.substring(8, 10));
+								} catch(err) {
+									this.entriesTextError = "End Date specified on line " + (i + 1) + " is invalid or missing";
+									break;
+								}
+								
+								if(this.entriesTextError == null && ed < sd) {
+									this.entriesTextError = "End Date specified on line " + (i + 1) + " must be on or after Start Date";
+									break;
+								}
+
+								if(loverrideUom != "" && !this.config.uoms.includes(loverrideUom)) {
+									this.entriesTextError = "Unit of Measure specified on line " + (i + 1) + " is invalid";
+									break;
+								}
+								let entry = {
+										mdp: lmdp.toUpperCase(),
+										nmi: lnmi.toUpperCase(),
+										meterSerialNumber: lmeterSerialNumber.toUpperCase(),
+										nmiSuffix: lnmiSuffix.toUpperCase(),
+										registerId: lregisterId.toUpperCase(),
+										startDate: lstartDate,
+										endDate: lendDate,
+										overrideUom: loverrideUom
+								};
+								
+								entries.push(entry);
+							}
+							
+							if(this.entriesTextError != null) return;
 							this.$emit("add-entries", entries);
 						}
 					}
@@ -386,6 +518,7 @@ var app = new Vue({
 		},
 		"delivery-method": {
 			template: "#delivery-method-template",
+			props: ["config", "entries"],
 			data: function() {
 				return {
 					showDeliveryMethods: false,
@@ -420,15 +553,15 @@ var app = new Vue({
 					this.showDeliveryMethods = false;
 					this.$emit("generate-imd-via-xai", target);
 				},
-				generateNem12Csv: function() {
+				generateNem12Csv: function(parms) {
 					this.selectedMethod = null;
 					this.showDeliveryMethods = false;
-					this.$emit("generate-nem12-csv");
+					this.$emit("generate-nem12-csv", parms);
 				},
-				generateNem12AseXML: function() {
+				generateNem12AseXML: function(parms) {
 					this.selectedMethod = null;
 					this.showDeliveryMethods = false;
-					this.$emit("generate-nem12-asexml");
+					this.$emit("generate-nem12-asexml", parms);
 				}
 			},
 			computed: {
@@ -439,24 +572,18 @@ var app = new Vue({
 			components: {
 				"imd-via-jms-delivery": {
 					template: "#imd-via-jms-template",
+					props: ["config", "entries"],						
 					data: function() {
 						return {
-							servers: {
-								"MSGASVD4": {name: "MSGASVD4", server: "10.20.30.40", 
-									queues: [{name: "queue1"}]
-								},
-								"MSGASVD5": {name: "MSGASVD5", server: "192.168.45.4", 
-									queues: [{name: "queue1"},{name: "queue2"}]
-								}
-							},
+							servers: this.config.jmsDestinations,
 							server: "",
-							username: "",
-							password: ""
+							jmsUsername: "",
+							jmsPassword: ""
 						};
 					},
 					computed: {
-						serverHost: function() {
-							return this.servers[this.server] === undefined ? "" : this.servers[this.server].server;
+						serverUrl: function() {
+							return this.servers[this.server] === undefined ? "" : this.servers[this.server].url;
 						},
 						serverQueues: function() {
 							return this.servers[this.server] === undefined ? "" : this.servers[this.server].queues;
@@ -464,9 +591,12 @@ var app = new Vue({
 					},
 					methods: {
 						generate: function() {
-							this.$emit("generate-imd-via-jms", {
-								server: this.server, username: this.username, password: this.password
-							});
+							let parms = {};
+							parms.server = this.server;
+							if(this.jmsUsername.trim() != "") parms.username = this.jmsUsername.trim();
+							if(this.jmsPassword.trim() != "") parms.password = this.jmsPassword.trim();
+							
+							this.$emit("generate-imd-via-jms", parms);
 						},
 						cancel: function() {
 							this.$emit("cancel");
@@ -475,18 +605,28 @@ var app = new Vue({
 				},
 				"imd-via-xai-delivery": {
 					template: "#imd-via-xai-template",
+					props: ["config", "entries"],						
 					data: function() {
 						return {
+							servers: this.config.xaiDestinations,
 							server: "",
-							username: "",
-							password: ""
+							xaiUsername: "",
+							xaiPassword: ""
 						};
+					},
+					computed: {
+						serverUrl: function() {
+							return this.servers[this.server] === undefined ? "" : this.servers[this.server].url;
+						},
 					},
 					methods: {
 						generate: function() {
-							this.$emit("generate-imd-via-xai", {
-								server: this.server
-							});
+							let parms = {};
+							parms.server = this.server;
+							if(this.xaiUsername.trim() != "") parms.username = this.xaiUsername.trim();
+							if(this.xaiPassword.trim() != "") parms.password = this.xaiPassword.trim();
+							
+							this.$emit("generate-imd-via-xai", parms);
 						},
 						cancel: function() {
 							this.$emit("cancel");
@@ -495,17 +635,43 @@ var app = new Vue({
 				},
 				"nem12-delivery": {
 					template: "#nem12-template",
+					props: ["config", "entries"],						
 					data: function() {
 						return {
+							mdp: "",
+							targetParticipant: this.config.frmps[0],
+							targetRole: this.config.participantRoles[0],
+							nem12FileName: "",
+							nem12UpdateDateTime: new Date()
 						};
 					},
+					created: function() {
+						this.mdp = determineMdp(this.entries);
+						if(this.mdp != "")
+							this.nem12FileName = deriveFileName(this.mdp);
+					},
 					methods: {
+						mdpChanged: function() {
+							if(this.mdp != "")
+								this.nem12FileName = deriveFileName(this.mdp);
+						},
 						downloadNem12: function() {
 							this.$emit("generate-nem12-csv", {
+								mdp: this.mdp,
+								mdpError: "",
+								targetParticipant: this.targetParticipant,
+								targetRole: this.targetRole,
+								nem12FileName: this.nem12FileName,
+								nem12UpdateDateTime: this.nem12UpdateDateTime
 							});
 						},
 						downloadNem12AseXML: function() {
 							this.$emit("generate-nem12-asexml", {
+								mdp: this.mdp,
+								targetParticipant: this.targetParticipant,
+								targetRole: this.targetRole,
+								nem12FileName: this.nem12FileName,
+								nem12UpdateDateTime: this.nem12UpdateDateTime
 							});
 						},
 						cancel: function() {
@@ -528,6 +694,63 @@ var app = new Vue({
 });
 
 // Helper functions for the application ...
+
+function loadConfig(vm) {
+	// Load configuration for this application.
+	// Configuration is stored in a JSON file. This JSON object is loaded into the vm.config
+	
+	let configLoader = new XMLHttpRequest();
+	configLoader.onreadystatechange = function() {
+		if(this.readyState == 4) {
+			if(this.status == 200) {
+				vm.config = JSON.parse(this.responseText);
+				vm.configLoaded = true; 
+				vm.config.jmsDestinationsLoaded = false;
+				loadJMSDestinations(vm);
+				vm.config.xaiDestinationsLoaded = false;
+				loadXAIDestinations(vm);
+			}
+		}
+	};
+	configLoader.open("GET", "js/config.json", true);
+	configLoader.send();
+}
+
+function loadJMSDestinations(vm) {
+	let configLoader = new XMLHttpRequest();
+	configLoader.onreadystatechange = function() {
+		if(this.readyState == 4) {
+			if(this.status == 200) {
+				let jds = JSON.parse(this.responseText);
+				if(jds.errors == null) {
+					vm.config.jmsDestinations = jds.destinations;
+					vm.config.jmsDestinationsLoaded = true;
+					console.log(jds);
+				}
+			}
+		}
+	};
+	configLoader.open("GET", "api/config/jms_destinations", true);
+	configLoader.send();
+}
+
+function loadXAIDestinations(vm) {
+	let configLoader = new XMLHttpRequest();
+	configLoader.onreadystatechange = function() {
+		if(this.readyState == 4) {
+			if(this.status == 200) {
+				let xds = JSON.parse(this.responseText);
+				if(xds.errors == null) {
+					vm.config.xaiDestinations = xds.destinations;
+					vm.config.xaiDestinationsLoaded = true;
+					console.log(xds);
+				}
+			}
+		}
+	};
+	configLoader.open("GET", "api/config/xai_destinations", true);
+	configLoader.send();
+}
 
 // Create a base request object for a generator ...
 function createBaseRequestObject(data) {
@@ -560,6 +783,12 @@ function createBaseRequestObject(data) {
 		rc.registerId = e.registerId.trim();
 		rc.startDate = e.startDate.trim();
 		rc.endDate = e.endDate.trim();
+		
+		if(e.overrideUom != null && e.overrideUom.trim() != "")
+			rc.overrideUom = e.overrideUom.trim();
+		if(e.transactionId != null && e.transactionId.trim() != "")
+			rc.transactionId = e.transactionId.trim();
+		
 		req.requestedChannels.push(rc);
 	});
 	
@@ -602,12 +831,12 @@ function invokeAPI(apiUri, additionalParms, vm, callback) {
 				} else {
 					vm.generator.id = null;
 					vm.generator.status = "Error";
-					vm.generator.errorMessage = "Error message: " + response.errorMessage;
+					vm.generator.errorMessage = response.errorMessage;
 				}
 			} else {
 				vm.generator.id = null;
 				vm.generator.status = "Error";
-				vm.generator.errorMessage = "Request status received: " + this.status;
+				vm.generator.errorMessage = "Service call failed with status " + this.status;
 			}
 		}
 	};
@@ -656,7 +885,7 @@ function checkStatus(vm, callback) {
 						
 						// Only if status is available, and status is RUNNING, re-trigger status check
 						// after a second ...
-						setTimeout(function() { checkStatus(vm, callback); }, 1000); 
+						setTimeout(function() { checkStatus(vm, callback); }, 2000); 
 					}
 				} 
 			} else {
@@ -671,22 +900,41 @@ function checkStatus(vm, callback) {
 }
 
 
-function downloadFile(data, fnprefix, fnext) {
+function downloadFile(data, fn) {
 	let blob = new Blob([data], {type : "text/plain"});
 	let link = document.createElement("a");
 	link.href = URL.createObjectURL(blob);
+	link.setAttribute("download", fn);
+	link.click();
+	URL.revokeObjectURL(link.href);
+}
+
+function getISODate(date) {
+	if(!date) return null;
+	return date.getFullYear() + "-" + date.getMonth().padStart(2, "0") + "-" + date.getDate().padStart(2, "0"); 
+}
+
+function determineMdp(entries) {
+	let mdp = "";
+	for(let i = 0; i < entries.length; ++i) {
+		if(mdp == "") mdp = entries[i].mdp
+		else if(mdp != entries[i].mdp) {
+			mdp = "";
+			break;
+		}
+	}
+	return mdp;
+}
+
+function deriveFileName(mdp) {
 	let dttm = new Date();
-	let fileName = fnprefix + 
+	return mdp + 
 		String(dttm.getFullYear()).padStart(4, "0") + "-" +
 		String(dttm.getMonth()).padStart(2, "0") + "-" +
 		String(dttm.getDate()).padStart(2, "0") + "-" +
 		String(dttm.getHours()).padStart(2, "0") +
 		String(dttm.getMinutes()).padStart(2, "0") +
-		String(dttm.getSeconds()).padStart(2, "0") +
-		fnext;
-	link.setAttribute("download", fileName);
-	link.click();
-	URL.revokeObjectURL(link.href);
+		String(dttm.getSeconds()).padStart(2, "0");
 }
 
 })();
