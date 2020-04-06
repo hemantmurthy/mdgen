@@ -2,6 +2,7 @@ package hamy.mdgen.api.generator.base;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.Map;
 import hamy.mdgen.api.generator.base.GeneratorInput.ChannelTemplate;
 import hamy.mdgen.api.generator.base.GeneratorInput.Read;
 import hamy.mdgen.api.generator.base.GeneratorInput.RequestedChannel;
+import hamy.mdgen.config.UOMConvertorsFactory;
+import hamy.mdgen.config.UOMConvertorsFactory.UOMConvertors;
 
 /**
  * The Meter Data Generator. This class is the work-horse of the meter generator
@@ -26,6 +29,8 @@ public abstract class Generator {
 	private int numReadsProcessed = 0;
 	private String status;
 	private String errorMessage;
+	
+	private UOMConvertors uomConvertors = UOMConvertorsFactory.loadConfig();
 	
 	public Generator(GeneratorInput input) {
 		this.input = input;
@@ -139,6 +144,9 @@ public abstract class Generator {
 				String uom = rc.getOverrideUom();
 				uom = uom == null || "".equals(uom.trim()) ? ct.getUom() : uom.trim();
 				
+				// Get a convertor from template UOM to selected UOM if available ...
+				UOMConvertors.UOMConvertor uomConvertor = uomConvertors.get(ct.getUom(), uom);
+				
 				String mdp = fileMdp;
 				mdp = mdp == null || "".equals(mdp.trim()) ? requestMdp : mdp.trim();
 				
@@ -149,6 +157,20 @@ public abstract class Generator {
 				// Process reads one day at a time ...
 				for(LocalDate date = startDate; date.compareTo(endDate) <= 0; date = date.plusDays(1)) {
 					List<Read> reads = ct.getReads();
+					
+					// Apply conversion factor on reads if necessary ...
+					if(uomConvertor != null) {
+						List<Read> convertedReads = new ArrayList<>();
+						reads.forEach(r -> {
+							Read cr = new Read();
+							cr.setQual(r.getQual());
+							cr.setRd(uomConvertor.convert(r.getRd()));
+							convertedReads.add(cr);
+						});
+						
+						reads = convertedReads;
+					}
+					
 					processReadsForADay(date, reads, indexRead);
 					++numReadsProcessed;
 				}
