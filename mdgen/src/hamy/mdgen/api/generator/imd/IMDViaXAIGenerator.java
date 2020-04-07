@@ -114,7 +114,7 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 		Dispatcher(String serverUrl, String username, String password) throws MalformedURLException {
 			CMIMDSeederService service = 
 					serverUrl == null ? new CMIMDSeederService() : 
-						new CMIMDSeederService(new URL(serverUrl + "/CM-IMDSeeder"));
+						new CMIMDSeederService(new URL(serverUrl + "/CM-IMDSeeder?WSDL"));
 			CMIMDSeederPortType port = service.getCMIMDSeederPort();
 			BindingProvider bp = (BindingProvider) port;
 			Map<String, Object> rc = bp.getRequestContext();
@@ -132,6 +132,11 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 		
 		void dispatch(CMIMDSeeder imd) {
 			this.imd = imd;
+			try {
+				imdMarshaller.marshal(imd,  System.out);
+			} catch (JAXBException e) {
+				e.printStackTrace();
+			}
 			thread = new Thread(this);
 			thread.start();
 			logger.log(Level.FINER, "Dispatcher started");

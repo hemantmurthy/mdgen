@@ -766,7 +766,7 @@ function createBaseRequestObject(data) {
 		ct.reads = [];
 		
 		ch.intervals.forEach(function(int) {
-			ct.reads.push({rd: Number(int.value.toString().trim()).toFixed(3), qual: int.quality.trim() });
+			ct.reads.push({rd: Number(int.value.toString().trim()).toFixed(3), qual: int.quality.trim().toUpperCase() });
 		});
 		
 		req.channelTemplates.push(ct);

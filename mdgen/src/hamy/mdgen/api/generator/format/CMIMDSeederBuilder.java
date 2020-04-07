@@ -84,11 +84,18 @@ public class CMIMDSeederBuilder {
 		List<CMIMDSeeder.PreVEE.Msrs.ML> mls = msrs.getML();
 		int seq = 1;
 		CMIMDSeeder.PreVEE.Msrs.ML ml;
+		String condFlag; 
+		String reasonCode = "001";
 		for(Read rd : reads) {
 			ml = new CMIMDSeeder.PreVEE.Msrs.ML();
 			ml.setS(BigDecimal.valueOf(seq));
 			ml.setQ(BigDecimal.valueOf(rd.getRd()));
-			ml.setFc(of.createCMIMDSeederPreVEEMsrsMLFc(qualityMethodFCMapping.getProperty(rd.getQual())));
+			condFlag = qualityMethodFCMapping.getProperty(rd.getQual());
+			if(condFlag == null) throw new RuntimeException("Unable to map quality " + rd.getQual() + " to condition flag");
+			if("Y".equalsIgnoreCase(qualityMethodReasonNeededMapping.getProperty(rd.getQual())))
+					condFlag += reasonCode;
+			else condFlag += "000";
+			ml.setFc(of.createCMIMDSeederPreVEEMsrsMLFc(condFlag));
 			mls.add(ml);
 			++seq;
 		}
