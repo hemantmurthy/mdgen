@@ -112,9 +112,10 @@ public abstract class Generator {
 		// Start processing for a file ...
 		String fileMdp = input.getMdp();
 		String targetParticipant = input.getTargetParticipant();
+		String targetRole = input.getTargetRole();
 		String nem12FileName = input.getNem12FileName();
 		ZonedDateTime nem12UpdateDateTime = input.getNem12UpdateDateTime();
-		processFile(fileMdp, targetParticipant, nem12FileName, nem12UpdateDateTime);
+		processFile(fileMdp, targetParticipant, targetRole, nem12FileName, nem12UpdateDateTime);
 		
 		// Process each channel ...
 		for(RequestedChannel rc : input.getRequestedChannels()) {
@@ -212,10 +213,12 @@ public abstract class Generator {
 	 * Start process for one file. This method will be invoked before any other method is invoked,
 	 * and is called at the beginning of processing.
 	 * @param mdp The MDP.
+	 * @param targetParticipant The participant to which reads are sent
+	 * @param targetRole The role of the target participant
 	 * @param nem12FileName The NEM12 File Name.
 	 * @param nem12UpdateDateTime The Update Datetime of the NEM 12 File.
 	 */
-	public abstract void processFile(String mdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime);
+	public abstract void processFile(String mdp, String targetParticipant, String targetRole, String nem12FileName, ZonedDateTime nem12UpdateDateTime);
 	
 	/**
 	 * Start processing a single register. This method will be invoked zero or more times after processFile,

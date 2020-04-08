@@ -19,12 +19,23 @@ public class NEM12CSVGenerator extends Generator {
 	private StringBuilder buffer = new StringBuilder();
 	private String generatedData = null;
 	
+	protected String mdp;
+	protected String targetRole = null;
+	protected String targetParticipant = null;
+	protected String nem12FileName; 
+	protected ZonedDateTime nem12UpdateDateTime = null;
+	
 	public NEM12CSVGenerator(GeneratorInput input) {
 		super(input);
 	}
 
 	@Override
-	public void processFile(String mdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
+	public void processFile(String mdp, String targetParticipant, String targetRole, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
+		this.mdp = mdp;
+		this.targetRole = targetRole;
+		this.targetParticipant = targetParticipant;
+		this.nem12FileName = nem12FileName;
+		this.nem12UpdateDateTime = nem12UpdateDateTime;
 		String rec100 = NEM12CSVBuilder.create100Record(nem12UpdateDateTime, mdp, targetParticipant);
 		buffer.append(rec100).append("\n");
 	}
@@ -49,7 +60,7 @@ public class NEM12CSVGenerator extends Generator {
 			}
 		}
 		
-		String rec300 = NEM12CSVBuilder.create300Record(date, reads, readQuality, "", "", null, null);
+		String rec300 = NEM12CSVBuilder.create300Record(date, reads, readQuality, "", "", nem12UpdateDateTime, null);
 		buffer.append(rec300).append("\n");
 		
 		// Generate 400 records if read quality is V ...
@@ -61,8 +72,6 @@ public class NEM12CSVGenerator extends Generator {
 					// Generate 400 record for previous block
 					String rec400 = NEM12CSVBuilder.create400Record(startInt, endInt, prevQ, null);
 					buffer.append(rec400).append("\n");
-					//System.out.println(rec400);
-					
 					startInt = endInt + 1;
 				}
 				

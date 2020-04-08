@@ -15,15 +15,15 @@ import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;;
 
 public class IMDGenerator extends Generator {
-	private String fileMdp;
-	private String nem12FileName; 
-	private ZonedDateTime nem12UpdateDateTime;
-	private String mdp;
-	private String nmi;
-	private String meterSerialNumber;
-	private String nmiSuffix;
-	private String registerId;
-	private String uom;
+	protected String fileMdp;
+	protected String nem12FileName; 
+	protected ZonedDateTime nem12UpdateDateTime;
+	protected String mdp;
+	protected String nmi;
+	protected String meterSerialNumber;
+	protected String nmiSuffix;
+	protected String registerId;
+	protected String uom;
 	private int intervalSize;
 	
 	public IMDGenerator(GeneratorInput input) {
@@ -31,12 +31,12 @@ public class IMDGenerator extends Generator {
 	}
 	
 	@Override
-	public void processFile(String fileMdp, String targetParticipant, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
-		this.fileMdp = fileMdp;
+	public void processFile(String mdp, String targetParticipant, String targetRole, String nem12FileName, ZonedDateTime nem12UpdateDateTime) {
+		this.fileMdp = mdp;
 		this.nem12FileName = nem12FileName;
 		this.nem12UpdateDateTime = nem12UpdateDateTime;
 		
-		// targetParticipant is not required for IMDs.
+		// targetParticipant and targetRole are not required for IMDs.
 	}
 
 	@Override

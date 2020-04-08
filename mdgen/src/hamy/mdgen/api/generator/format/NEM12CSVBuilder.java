@@ -42,7 +42,7 @@ public class NEM12CSVBuilder {
 	}
 	
 	public static String create300Record(LocalDate date, List<Read> reads, String qualityMethod, 
-			String reasonCode, String reasonDescription, LocalDateTime updateDateTime, LocalDateTime msatsLoadDateTime) {
+			String reasonCode, String reasonDescription, ZonedDateTime updateDateTime, ZonedDateTime msatsLoadDateTime) {
 		StringBuilder sb = new StringBuilder()
 			.append("300").append(DELIMITER)
 			.append(date.format(DATE_8_FORMAT)).append(DELIMITER);

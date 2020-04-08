@@ -32,14 +32,18 @@ public class CMIMDSeederBuilder {
 		
 		InputStream propStream = null;
 		try {
-			propStream = CMIMDSeederBuilder.class.getResourceAsStream("quality_method_mapping.properties");
+			propStream = CMIMDSeederBuilder.class.getClassLoader().getResourceAsStream("quality_method_mapping.properties");
+			if(propStream == null)
+				throw new RuntimeException("Unable to find quality method mapping properties file");
 			qualityMethodFCMapping.load(propStream);
 		} catch (IOException e) {
 			throw new RuntimeException("Unable to load Quality Method Mapping", e);
 		}
 
 		try {
-			propStream = CMIMDSeederBuilder.class.getResourceAsStream("quality_method_reason_needed.properties");
+			propStream = CMIMDSeederBuilder.class.getClassLoader().getResourceAsStream("quality_method_reason_needed.properties");
+			if(propStream == null)
+				throw new RuntimeException("Unable to find quality method reason needed properties file");
 			qualityMethodReasonNeededMapping.load(propStream);
 		} catch (IOException e) {
 			throw new RuntimeException("Unable to load Quality Method Reason Needed Mapping", e);

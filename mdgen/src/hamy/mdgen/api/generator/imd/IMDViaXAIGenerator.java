@@ -1,18 +1,19 @@
 package hamy.mdgen.api.generator.imd;
 
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Holder;
+
+import org.apache.log4j.Logger;
 
 import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
@@ -24,7 +25,7 @@ import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations;
 import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations.XAIDestination;
 
 public class IMDViaXAIGenerator extends IMDGenerator {
-	private static Logger logger = Logger.getLogger(IMDViaXAIGenerator.class.getName());
+	private static Logger logger = Logger.getLogger(IMDViaXAIGenerator.class);
 	
 	private static XAIDestinations xaiDestinations = null;
 	static {
@@ -38,6 +39,7 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 	private String password;
 	
 	private int numFailure = 0;
+	Marshaller imdMarshaller = null;
 	
 	public IMDViaXAIGenerator(IMDViaXAIGeneratorInput input, int poolSize) {
 		super(input);
@@ -66,11 +68,16 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 		
 		this.poolSize = input.getDispatcherPoolSize() == 0 ? this.poolSize : input.getDispatcherPoolSize();
 		
+		try {
+			this.imdMarshaller = CMIMDSeederJAXBContext.createMarshaller();
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
 	}
 
 	
 	@Override
-	public void processFile(String mdp, String targetParticipant, String nem12FileName,
+	public void processFile(String mdp, String targetParticipant, String targetRole, String nem12FileName,
 			ZonedDateTime nem12UpdateDateTime) {
 		for(int i = 0; i < poolSize; ++i)
 			try {
@@ -78,11 +85,21 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 			} catch (MalformedURLException e) {
 				throw new RuntimeException("Server URL invalid. (" + this.serverUrl + ")", e);
 			}
-		super.processFile(mdp, targetParticipant, nem12FileName, nem12UpdateDateTime);
+		super.processFile(mdp, targetParticipant, targetRole, nem12FileName, nem12UpdateDateTime);
 	}
 
 	@Override
 	protected void dispatchIMD(CMIMDSeeder imd) {
+		//if(logger.isDebugEnabled()) {
+			try {
+				StringWriter out = new StringWriter();
+				imdMarshaller.marshal(imd, out);
+				logger.info(out.toString());
+				System.out.println(out.toString());
+			} catch (JAXBException e) {
+				logger.warn("Unable to marshal IMD into XML", e);
+			}
+		//}
 		Dispatcher d = getDispatcherFromPool();
 		d.dispatch(imd);
 	}
@@ -109,7 +126,6 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 		CMIMDSeederPortType port = null;
 		Thread thread = null;
 		CMIMDSeeder imd = null;
-		Marshaller imdMarshaller = null;
 		
 		Dispatcher(String serverUrl, String username, String password) throws MalformedURLException {
 			CMIMDSeederService service = 
@@ -122,39 +138,28 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 			rc.put(BindingProvider.PASSWORD_PROPERTY, password);
 
 			this.port = port;
-
-			try {
-				this.imdMarshaller = CMIMDSeederJAXBContext.createMarshaller();
-			} catch (JAXBException e) {
-				throw new RuntimeException("Unable to create Marshaller", e);
-			}
 		}
 		
 		void dispatch(CMIMDSeeder imd) {
 			this.imd = imd;
-			try {
-				imdMarshaller.marshal(imd,  System.out);
-			} catch (JAXBException e) {
-				e.printStackTrace();
-			}
 			thread = new Thread(this);
 			thread.start();
-			logger.log(Level.FINER, "Dispatcher started");
+			logger.debug("Dispatcher started");
 		}
 		
 		@Override
 		public void run() {
-			logger.log(Level.FINER, "Dispatcher running ...");
+			logger.debug("Dispatcher running ...");
 			try {
 				Holder<CMIMDSeeder> h = new Holder<CMIMDSeeder>(imd);
 				port.cmIMDSeeder(h);
 				logger.info("IMD Created: ID: " + h.value.getInitialMeasurementDataId());
 			} catch (CMIMDSeederFault e) {
-				logger.warning("Fault response received. " + e.getMessage());
+				logger.warn("Fault response received. ", e);
 			} finally {
 				this.imd = null;
 				addDispatcherToPool(this);
-				logger.log(Level.FINER, "Dispatcher completed");
+				logger.debug("Dispatcher completed");
 			}
 		}
 	}

@@ -521,6 +521,8 @@ var app = new Vue({
 			props: ["config", "entries"],
 			data: function() {
 				return {
+					nem12UpdateDateTime: new Date().toISOString().substring(0, 16),
+					nem12FileName: deriveFileName("MDGEN_"),
 					showDeliveryMethods: false,
 					deliveryMethods: {
 						"imd-via-jms": {label: "IMD via JMS", component: "imd-via-jms-delivery" },
@@ -542,26 +544,25 @@ var app = new Vue({
 					this.selectedMethod = null;
 					this.showDeliveryMethods = false;
 				},
-				generateImdViaJms: function(target) 
+				generateImdViaJms: function(parms) 
 				{
-					this.selectedMethod = null;
-					this.showDeliveryMethods = false;
-					this.$emit("generate-imd-via-jms", target);
+					this.emitGenerateRequest("generate-imd-via-jms", parms);
 				},
-				generateImdViaXai: function(target) {
-					this.selectedMethod = null;
-					this.showDeliveryMethods = false;
-					this.$emit("generate-imd-via-xai", target);
+				generateImdViaXai: function(parms) {
+					this.emitGenerateRequest("generate-imd-via-xai", parms);
 				},
 				generateNem12Csv: function(parms) {
-					this.selectedMethod = null;
-					this.showDeliveryMethods = false;
-					this.$emit("generate-nem12-csv", parms);
+					this.emitGenerateRequest("generate-nem12-csv", parms);
 				},
 				generateNem12AseXML: function(parms) {
+					this.emitGenerateRequest("generate-nem12-asexml", parms);
+				},
+				emitGenerateRequest(event, parms) {
 					this.selectedMethod = null;
 					this.showDeliveryMethods = false;
-					this.$emit("generate-nem12-asexml", parms);
+					parms.nem12FileName = this.nem12FileName;
+					parms.nem12UpdateDateTime = this.nem12UpdateDateTime + ":00.000Z";
+					this.$emit(event, parms);
 				}
 			},
 			computed: {
@@ -640,38 +641,30 @@ var app = new Vue({
 						return {
 							mdp: "",
 							targetParticipant: this.config.frmps[0],
-							targetRole: this.config.participantRoles[0],
-							nem12FileName: "",
-							nem12UpdateDateTime: new Date()
+							targetRole: this.config.participantRoles[0]
 						};
 					},
 					created: function() {
 						this.mdp = determineMdp(this.entries);
-						if(this.mdp != "")
-							this.nem12FileName = deriveFileName(this.mdp);
 					},
 					methods: {
-						mdpChanged: function() {
+						/*mdpChanged: function() {
 							if(this.mdp != "")
 								this.nem12FileName = deriveFileName(this.mdp);
-						},
+						},*/
 						downloadNem12: function() {
 							this.$emit("generate-nem12-csv", {
 								mdp: this.mdp,
 								mdpError: "",
 								targetParticipant: this.targetParticipant,
-								targetRole: this.targetRole,
-								nem12FileName: this.nem12FileName,
-								nem12UpdateDateTime: this.nem12UpdateDateTime
+								targetRole: this.targetRole
 							});
 						},
 						downloadNem12AseXML: function() {
 							this.$emit("generate-nem12-asexml", {
 								mdp: this.mdp,
 								targetParticipant: this.targetParticipant,
-								targetRole: this.targetRole,
-								nem12FileName: this.nem12FileName,
-								nem12UpdateDateTime: this.nem12UpdateDateTime
+								targetRole: this.targetRole
 							});
 						},
 						cancel: function() {
@@ -926,9 +919,9 @@ function determineMdp(entries) {
 	return mdp;
 }
 
-function deriveFileName(mdp) {
+function deriveFileName(prefix) {
 	let dttm = new Date();
-	return mdp + 
+	return prefix + 
 		String(dttm.getFullYear()).padStart(4, "0") + "-" +
 		String(dttm.getMonth()).padStart(2, "0") + "-" +
 		String(dttm.getDate()).padStart(2, "0") + "-" +
