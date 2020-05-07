@@ -7,7 +7,10 @@
         <password>MuSupE2!zu</password>
         <queues>
             <queue>
-                <name>ea.nem.b2b.external.mdms.mtrd.in.21</name>
+                <name>ea.nem.b2b.external.mdms.mtrd.in1.21</name>
+            </queue>
+            <queue>
+                <name>ea.nem.b2b.external.mdms.mtrd.in2.21</name>
             </queue>
         </queues>
     </destination>

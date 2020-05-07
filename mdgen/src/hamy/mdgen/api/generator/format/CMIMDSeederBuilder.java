@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
@@ -22,6 +23,7 @@ public class CMIMDSeederBuilder {
 	private static Properties qualityMethodFCMapping = new Properties();
 	private static Properties qualityMethodReasonNeededMapping = new Properties();
 	private static final ZoneId AEST = ZoneId.of("+10:00");
+	private static DateTimeFormatter imd_ext_id_date_suffix_format = null;
 	
 	static {
 		try {
@@ -48,6 +50,8 @@ public class CMIMDSeederBuilder {
 		} catch (IOException e) {
 			throw new RuntimeException("Unable to load Quality Method Reason Needed Mapping", e);
 		}
+		
+		imd_ext_id_date_suffix_format = DateTimeFormatter.ofPattern("MMddyyyyHHmmss");
 	}
 	
 	public static CMIMDSeeder build(String mdp, String nem12FileName, ZonedDateTime nem12UpdateDateTime, String nmi,
@@ -63,7 +67,8 @@ public class CMIMDSeederBuilder {
 		imd.setNmi(nmi);
 		
 		CMIMDSeeder.PreVEE pv = new CMIMDSeeder.PreVEE();
-		pv.setExternalId(null);
+		String imd_ext_id = nmi + "_" + meterSerialNumber + "_" + nmiSuffix + "_" + imd_ext_id_date_suffix_format.format(ZonedDateTime.now());
+		pv.setExternalId(imd_ext_id);
 		pv.setImdType(of.createCMIMDSeederPreVEEImdType("D1IL"));
 		
 		pv.setMdp(mdp);

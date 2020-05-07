@@ -85,6 +85,9 @@ var app = new Vue({
 		deleteEntry: function(index) {
 			this.entries.splice(index, 1);
 		},
+		emptyEntries: function() {
+			this.entries.splice(0, this.entries.length);
+		},
 		generateImdViaJms: function(parms) {
 			invokeAPI("api/generator/jms", parms, this)
 		},
@@ -261,6 +264,9 @@ var app = new Vue({
 				updateEntry: function(entry) {
 					this.showEntryMode = null;
 					this.$emit("update-entry", entry);
+				},
+				emptyEntries: function() {
+					this.$emit("empty-entries");				
 				}
 			},
 			components: {
@@ -276,6 +282,9 @@ var app = new Vue({
 						},
 						editEntry: function(entryIndex) {
 							this.$emit("edit-entry", entryIndex);
+						},
+						emptyEntries: function() {
+							this.$emit("empty-entries");				
 						}
 					}
 				},
@@ -759,7 +768,7 @@ function createBaseRequestObject(data) {
 		ct.reads = [];
 		
 		ch.intervals.forEach(function(int) {
-			ct.reads.push({rd: Number(int.value.toString().trim()).toFixed(3), qual: int.quality.trim().toUpperCase() });
+			ct.reads.push({rd: Number(int.value.toString().trim()).toFixed(6), qual: int.quality.trim().toUpperCase() });
 		});
 		
 		req.channelTemplates.push(ct);

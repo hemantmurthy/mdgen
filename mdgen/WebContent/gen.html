@@ -7,6 +7,45 @@
     <script src="lib/vue.js"></script>
 </head>
 <body>
+	<!-- Application Page -->
+	<div id="header">
+		<h1>Meter Data Generator <small>v1.0</small></h1>
+	</div>
+	<div id="app">
+		<div id="app-loading-pane" v-if="!configLoaded">
+			<img src="img/loading_spinner.gif"/>
+		</div>
+		<select-size
+			:config="config" 
+			@set-size="setSize"></select-size>
+		<div v-if="intervalSize">
+			<manage-channels 
+				:config="config" :channels="channels" :interval-size="intervalSize" :interval-labels="intervalLabels"
+				@add-channel="addChannel" @delete-channel="deleteChannel"></manage-channels>
+	        <meter-entries 
+	        	:config="config" :entries="entries"
+	        	@add-entries="addEntries"
+	        	@update-entry="updateEntry"
+	        	@delete-entry="deleteEntry"
+	        	@empty-entries="emptyEntries"></meter-entries>
+	        <delivery-method
+	        	:config="config"
+	        	:entries="entries"
+	        	@generate-imd-via-jms="generateImdViaJms"
+	        	@generate-imd-via-xai="generateImdViaXai"
+	        	@generate-nem12-csv="generateNem12Csv"
+	        	@generate-nem12-asexml="generateNem12AseXML"></delivery-method>
+	        	
+	        <generator-status v-if="showGeneratorStatus" 
+	        	:generator="generator"
+	        	@close="closeGeneratorStatus"></generator-status>
+	        	
+        </div>
+	</div>
+	<div id="footer">
+		<p>Tool developed by Hamy (Wipro Technologies) &lt;<a href="mailto:hemant.murthy@wipro.com">hemant.murthy@wipro.com</a>&gt;.</p>
+	</div>
+	
 	<script type="text/x-template" id="modal-popup-template">
 	<transition name="fade">
 	<div class="modal">
@@ -83,7 +122,7 @@
 
 		<view-all-entries v-if="viewAllEntriesVisible" 
 			:config="config" :entries="entries" 
-			@edit-entry="editEntry" @delete-entry="deleteEntry" @close="closeViewAllEntries"></view-all-entries>
+			@edit-entry="editEntry" @delete-entry="deleteEntry" @empty-entries="emptyEntries" @close="closeViewAllEntries"></view-all-entries>
 	    <add-single-entry v-if="showEntryMode == 'single'" 
 			:config="config" action-label="Add" 
 			@add-entries="addEntries" @cancel="cancel"></add-single-entry>
@@ -108,7 +147,7 @@
 	<modal-popup>	
 		<h2>List of Entries</h2>
 		<div>
-		<p>The table below lists all entries added so far. Number of entries is {{entries.length}}</p>
+		<p>The table below lists all entries added so far. Number of entries is {{entries.length}}. <button v-if="entries.length > 0" @click="emptyEntries">Clear All Entries</button> </p>
 		<table>
 			<thead>
 				<tr>
@@ -406,44 +445,6 @@
 		</div>
 	</modal-popup>
 	</script>
-
-	<!-- Application Page -->
-	<div id="header">
-		<h1>Meter Data Generator <small>v1.0</small></h1>
-	</div>
-	<div id="app">
-		<div id="app-loading-pane" v-if="!configLoaded">
-			<img src="img/loading_spinner.gif"/>
-		</div>
-		<select-size
-			:config="config" 
-			@set-size="setSize"></select-size>
-		<div v-if="intervalSize">
-			<manage-channels 
-				:config="config" :channels="channels" :interval-size="intervalSize" :interval-labels="intervalLabels"
-				@add-channel="addChannel" @delete-channel="deleteChannel"></manage-channels>
-	        <meter-entries 
-	        	:config="config" :entries="entries"
-	        	@add-entries="addEntries"
-	        	@update-entry="updateEntry"
-	        	@delete-entry="deleteEntry"></meter-entries>
-	        <delivery-method
-	        	:config="config"
-	        	:entries="entries"
-	        	@generate-imd-via-jms="generateImdViaJms"
-	        	@generate-imd-via-xai="generateImdViaXai"
-	        	@generate-nem12-csv="generateNem12Csv"
-	        	@generate-nem12-asexml="generateNem12AseXML"></delivery-method>
-	        	
-	        <generator-status v-if="showGeneratorStatus" 
-	        	:generator="generator"
-	        	@close="closeGeneratorStatus"></generator-status>
-	        	
-        </div>
-	</div>
-	<div id="footer">
-		<p>Tool developed by Hamy (Wipro Technologies) &lt;<a href="mailto:hemant.murthy@energyaustralia.com.au">hemant.murthy@energyaustralia.com.au</a>&gt;.</p>
-	</div>
 </body>
 
 <script type="text/javascript" src="js/app.js"></script>
