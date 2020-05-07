@@ -60,6 +60,8 @@ public class XAIDestinationsFactory {
 	public static class XAIDestinations {
 		private Map<String, XAIDestination> destinations = new LinkedHashMap<>();
 		
+		public XAIDestinations() {}
+		
 		public XAIDestination get(String name) {
 			return this.destinations.get(name);
 		}
@@ -76,6 +78,8 @@ public class XAIDestinationsFactory {
 			private String username;
 			@XmlTransient
 			private String password;
+			
+			public XAIDestination() {}
 			
 			public String getUrl() { return this.url; }
 			public String getUsername() { return this.username; }

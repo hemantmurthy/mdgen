@@ -67,6 +67,8 @@ public class JMSDestinationsFactory {
 	public static class JMSDestinations {
 		private Map<String, JMSDestination> destinations = new LinkedHashMap<>();
 		
+		public JMSDestinations() {}
+		
 		public JMSDestination get(String name) {
 			return this.destinations.get(name);
 		}
@@ -85,6 +87,7 @@ public class JMSDestinationsFactory {
 			private String password;
 			private List<String> queues = new ArrayList<>();
 			
+			public JMSDestination() {}
 			public String getUrl() { return this.url; }
 			public List<String> getQueues() { return this.queues; }
 			public String getUsername() { return this.username; }
