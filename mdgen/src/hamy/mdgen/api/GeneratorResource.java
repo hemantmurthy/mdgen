@@ -12,6 +12,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import hamy.mdgen.api.generator.base.Generator;
 import hamy.mdgen.api.generator.base.GeneratorError;
 import hamy.mdgen.api.generator.base.GeneratorInput;
@@ -28,6 +30,8 @@ import hamy.mdgen.api.generator.nem12.NEM12CSVGenerator;
 
 @Path("/generator")
 public class GeneratorResource {
+	private static Logger log = Logger.getLogger(GeneratorResource.class);
+	
 	@POST
 	@Path("/xai")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -38,7 +42,7 @@ public class GeneratorResource {
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		System.out.println("XAI Generator created. ID: " + id + ", XAI Server: " + input.getServer());
+		log.info("XAI Generator created. ID: " + id + ", XAI Server: " + input.getServer());
 
 		try {
 			generator.processAsynchronously();
@@ -68,7 +72,7 @@ public class GeneratorResource {
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		System.out.println("JMS Generator created. ID: " + id + ", JMS Server: " + input.getServer());
+		log.info("JMS Generator created. ID: " + id + ", JMS Server: " + input.getServer());
 
 		try {
 			generator.processAsynchronously();
@@ -91,7 +95,7 @@ public class GeneratorResource {
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		System.out.println("NEM12 CSV Generator created. ID: " + id);
+		log.info("NEM12 CSV Generator created. ID: " + id);
 
 		try {
 			generator.processAsynchronously();
@@ -112,7 +116,7 @@ public class GeneratorResource {
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		System.out.println("NEM12 aseXML Generator created. ID: " + id);
+		log.info("NEM12 aseXML Generator created. ID: " + id);
 
 		try {
 			generator.processAsynchronously();

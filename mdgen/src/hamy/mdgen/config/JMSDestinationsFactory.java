@@ -1,18 +1,10 @@
 package hamy.mdgen.config;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import hamy.mdgen.config.JMSDestinationsXML.JMSDestinationXML;
 import hamy.mdgen.config.JMSDestinationsXML.JMSQueueXML;
@@ -61,39 +53,4 @@ public class JMSDestinationsFactory {
 		
 		return jmsds;
 	}
-	
-	@XmlRootElement(name="jmsDestinations")
-	@XmlAccessorType (XmlAccessType.FIELD)
-	public static class JMSDestinations {
-		private Map<String, JMSDestination> destinations = new LinkedHashMap<>();
-		
-		public JMSDestinations() {}
-		
-		public JMSDestination get(String name) {
-			return this.destinations.get(name);
-		}
-		
-		public Map<String, JMSDestination> getDestinations() {
-			return this.destinations;
-		}
-		
-		@XmlRootElement
-		@XmlAccessorType (XmlAccessType.FIELD)
-		public class JMSDestination {
-			private String url;
-			@XmlTransient
-			private String username;
-			@XmlTransient
-			private String password;
-			private List<String> queues = new ArrayList<>();
-			
-			public JMSDestination() {}
-			public String getUrl() { return this.url; }
-			public List<String> getQueues() { return this.queues; }
-			public String getUsername() { return this.username; }
-			public String getPassword() { return this.password; }
-			
-		}
-	}
-
 }

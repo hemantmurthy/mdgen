@@ -534,9 +534,9 @@ var app = new Vue({
 					nem12FileName: deriveFileName("MDGEN_"),
 					showDeliveryMethods: false,
 					deliveryMethods: {
+						"nem12": {label: "NEM12 File", component: "nem12-delivery" },
 						"imd-via-jms": {label: "IMD via JMS", component: "imd-via-jms-delivery" },
-						"imd-via-xai": {label: "IMD via XAI", component: "imd-via-xai-delivery" },
-						"nem12": {label: "NEM12 File", component: "nem12-delivery" }
+						"imd-via-xai": {label: "IMD via XAI", component: "imd-via-xai-delivery" }
 					},
 					selectedMethod: null
 				} 
@@ -544,7 +544,7 @@ var app = new Vue({
 			methods: {
 				show: function() {
 					this.showDeliveryMethods = true;
-					this.select("imd-via-jms");
+					this.select("nem12");
 				},
 				select: function(method) {
 					this.selectedMethod = method;
@@ -585,7 +585,7 @@ var app = new Vue({
 					props: ["config", "entries"],						
 					data: function() {
 						return {
-							servers: this.config.jmsDestinations,
+							servers: this.config.jmsDestinations == undefined ? {} : this.config.jmsDestinations,
 							server: "",
 							jmsUsername: "",
 							jmsPassword: ""
@@ -618,7 +618,7 @@ var app = new Vue({
 					props: ["config", "entries"],						
 					data: function() {
 						return {
-							servers: this.config.xaiDestinations,
+							servers: this.config.xaiDestinations == undefined ? {} : this.config.xaiDestinations,
 							server: "",
 							xaiUsername: "",
 							xaiPassword: ""
