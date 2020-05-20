@@ -6,7 +6,7 @@
         <username>b2badmin</username>
         <password>MuSupE2!zu</password>
         <queues>
-            <queue>
+            <queue> 
                 <name>ea.nem.b2b.external.mdms.mtrd.in1.21</name>
             </queue>
             <queue>
