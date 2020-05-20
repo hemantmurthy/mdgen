@@ -4,5 +4,5 @@
        <wls:library-name>jax-rs</wls:library-name>
        <wls:specification-version>2.0</wls:specification-version>
        <wls:exact-match>false</wls:exact-match>
-    </wls:library-ref>    
+    </wls:library-ref>
 </wls:weblogic-web-app>
