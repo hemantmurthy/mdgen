@@ -29,6 +29,14 @@ public class XAIDestinationsFactory {
 			} catch(Exception e) {
 				log.error("Unable to load XAI Destinations config", e);
 				defaultXAIDestinations = new XAIDestinations();
+				XAIDestinations.XAIDestination dest = defaultXAIDestinations.new XAIDestination();
+				dest.url = "http://10.175.121.154:7004//ouaf/XAIApp/xaiserver";
+				defaultXAIDestinations.destinations.put("DEV", dest);
+				
+				dest = defaultXAIDestinations.new XAIDestination();
+				dest.url = "http://10.175.102.74:7004/ouaf/XAIApp/xaiserver";
+				defaultXAIDestinations.destinations.put("ST", dest);
+				
 			}
 		}
 		return defaultXAIDestinations;
