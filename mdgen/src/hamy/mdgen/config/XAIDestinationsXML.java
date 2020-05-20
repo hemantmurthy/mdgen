@@ -14,6 +14,8 @@ public class XAIDestinationsXML {
 	@XmlElement(name="destination")
 	List<XAIDestinationXML> destinations = new ArrayList<>();
 	
+	public XAIDestinationsXML() {}
+	
 	public List<XAIDestinationXML> getDestinations() {
 		return destinations;
 	}
@@ -27,6 +29,8 @@ public class XAIDestinationsXML {
 		private String url;
 		private String username;
 		private String password;
+		
+		public XAIDestinationXML() {}
 		
 		public String getName() {
 			return name;

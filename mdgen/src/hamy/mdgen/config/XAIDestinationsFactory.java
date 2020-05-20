@@ -12,16 +12,24 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.log4j.Logger;
+
 import hamy.mdgen.config.XAIDestinationsXML.XAIDestinationXML;
 
 public class XAIDestinationsFactory {
+	private static Logger log = Logger.getLogger(XAIDestinationsFactory.class);
 	public static final String DEFAULT_XAI_CONFIG_FILE_PATH = "xai_config.xml";
 	
 	private static XAIDestinations defaultXAIDestinations = null;
 	public static XAIDestinations loadConfig() {
 		if(defaultXAIDestinations == null) {
-			defaultXAIDestinations = loadConfig(DEFAULT_XAI_CONFIG_FILE_PATH);
-			System.out.println("XAI Config Loaded. Number of entries: " + defaultXAIDestinations.getDestinations().size());
+			try {
+				defaultXAIDestinations = loadConfig(DEFAULT_XAI_CONFIG_FILE_PATH);
+				log.info("XAI Config Loaded. Number of entries: " + defaultXAIDestinations.getDestinations().size());
+			} catch(Exception e) {
+				log.error("Unable to load XAI Destinations config", e);
+				defaultXAIDestinations = new XAIDestinations();
+			}
 		}
 		return defaultXAIDestinations;
 	}

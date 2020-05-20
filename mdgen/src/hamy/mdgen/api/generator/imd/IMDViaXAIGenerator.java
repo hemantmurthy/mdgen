@@ -25,7 +25,7 @@ import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations;
 import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations.XAIDestination;
 
 public class IMDViaXAIGenerator extends IMDGenerator {
-	private static Logger logger = Logger.getLogger(IMDViaXAIGenerator.class);
+	private static Logger log = Logger.getLogger(IMDViaXAIGenerator.class);
 	
 	private static XAIDestinations xaiDestinations = null;
 	static {
@@ -90,18 +90,20 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 
 	@Override
 	protected void dispatchIMD(CMIMDSeeder imd) {
-		//if(logger.isDebugEnabled()) {
-			try {
-				StringWriter out = new StringWriter();
-				imdMarshaller.marshal(imd, out);
-				logger.info(out.toString());
-				System.out.println(out.toString());
-			} catch (JAXBException e) {
-				logger.warn("Unable to marshal IMD into XML", e);
+		try {
+			StringWriter out = new StringWriter();
+			imdMarshaller.marshal(imd, out);
+			if(log.isDebugEnabled()) {
+				log.debug("IMD Created");
+				log.debug(out.toString());
 			}
-		//}
+		} catch (JAXBException e) {
+			throw new RuntimeException("Unable to convert IMD data to XML", e);
+		}
 		Dispatcher d = getDispatcherFromPool();
+		log.trace("Dispatching IMD ...");
 		d.dispatch(imd);
+		log.trace("IMD Dispatched");
 	}
 	
 	void addDispatcherToPool(Dispatcher dispatcher) {
@@ -144,22 +146,22 @@ public class IMDViaXAIGenerator extends IMDGenerator {
 			this.imd = imd;
 			thread = new Thread(this);
 			thread.start();
-			logger.debug("Dispatcher started");
+			log.debug("Dispatcher started");
 		}
 		
 		@Override
 		public void run() {
-			logger.debug("Dispatcher running ...");
+			log.debug("Dispatcher running ...");
 			try {
 				Holder<CMIMDSeeder> h = new Holder<CMIMDSeeder>(imd);
 				port.cmIMDSeeder(h);
-				logger.info("IMD Created: ID: " + h.value.getInitialMeasurementDataId());
+				log.debug("IMD Created: ID: " + h.value.getInitialMeasurementDataId());
 			} catch (CMIMDSeederFault e) {
-				logger.warn("Fault response received. ", e);
+				log.warn("Fault response received. ", e);
 			} finally {
 				this.imd = null;
 				addDispatcherToPool(this);
-				logger.debug("Dispatcher completed");
+				log.debug("Dispatcher completed");
 			}
 		}
 	}

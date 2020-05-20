@@ -6,17 +6,25 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.log4j.Logger;
+
 import hamy.mdgen.config.JMSDestinationsXML.JMSDestinationXML;
 import hamy.mdgen.config.JMSDestinationsXML.JMSQueueXML;
 
 public class JMSDestinationsFactory {
+	private static Logger log = Logger.getLogger(JMSDestinationsFactory.class);
 	public static final String DEFAULT_JMS_CONFIG_FILE_PATH = "jms_config.xml";
 	
 	private static JMSDestinations defaultJMSDestinations = null;
 	public static JMSDestinations loadConfig() {
 		if(defaultJMSDestinations == null) {
-			defaultJMSDestinations = loadConfig(DEFAULT_JMS_CONFIG_FILE_PATH);
-			System.out.println("JMS Config Loaded. Number of entries: " + defaultJMSDestinations.getDestinations().size());
+			try {
+				defaultJMSDestinations = loadConfig(DEFAULT_JMS_CONFIG_FILE_PATH);
+				log.info("JMS Config Loaded. Number of entries: " + defaultJMSDestinations.getDestinations().size());
+			} catch(Exception e) {
+				log.error("Unable to load JMS Destinations Config", e);
+				defaultJMSDestinations = new JMSDestinations();
+			}
 		}
 		
 		return defaultJMSDestinations;
@@ -35,7 +43,7 @@ public class JMSDestinationsFactory {
 			xml = (JMSDestinationsXML) u.unmarshal(is);
 		
 		} catch (JAXBException e) {
-			throw new RuntimeException("Unable to parse JMS Destinations configuration file at " + xmlResourcePath);
+			throw new RuntimeException("Unable to parse JMS Destinations configuration file at " + xmlResourcePath, e);
 		}
 		
 		JMSDestinations jmsds = new JMSDestinations();

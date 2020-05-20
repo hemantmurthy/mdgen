@@ -10,6 +10,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.log4j.Logger;
 
 import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
@@ -18,6 +19,7 @@ import hamy.mdgen.config.JMSDestinations.JMSDestination;
 import hamy.mdgen.config.JMSDestinationsFactory;
 
 public class IMDViaJMSGenerator extends IMDGenerator {
+	private static Logger log = Logger.getLogger(IMDViaJMSGenerator.class);
 	
 	private static JMSDestinations jmsDestinations = null;
 	static {
@@ -40,6 +42,7 @@ public class IMDViaJMSGenerator extends IMDGenerator {
 			throw new RuntimeException("JMS Server not recognised. Value specified is " + input.getServer().trim());
 		
 		try {
+			log.trace("Creating connection factory for ActiveMQ server ...");
 			ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(jd.getUrl());
 			if(jd.getUsername() != null && jd.getPassword() != null) {
 				connectionFactory.setUserName(jd.getUsername()); 
@@ -50,12 +53,16 @@ public class IMDViaJMSGenerator extends IMDGenerator {
 			} else
 				throw new RuntimeException("Username and password are required");
 			
+			log.trace("Creating connection to Active MQ server ...");
 			connection = connectionFactory.createConnection();
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			
+			log.trace("Creating pool of message producers ...");
 			producers = new MessageProducer[jd.getQueues().size()];
 			for(int i = 0; i < producers.length; ++i)
 				producers[i] = session.createProducer(session.createQueue(jd.getQueues().get(i)));
+			
+			log.debug("Connected to Active MQ Server");
 		} catch (JMSException e) {
 			throw new RuntimeException("Unable to connect and establish session with JMS Server", e);
 		}
@@ -68,9 +75,15 @@ public class IMDViaJMSGenerator extends IMDGenerator {
 			StringWriter out = new StringWriter();
 			m.marshal(imd, out);
 			
+			if(log.isDebugEnabled()) {
+				log.debug("IMD Created");
+				log.debug(out.toString());
+			}
 			// Shift between queues ...
 			nextTargetIndex = (nextTargetIndex + 1) % producers.length;
+			log.trace("Dispatching IMD ...");
 			producers[nextTargetIndex].send(session.createTextMessage(out.toString()));
+			log.trace("IMD Dispatched");
 		} catch (JAXBException e) {
 			throw new RuntimeException("Unable to convert IMD data to XML", e);
 		} catch (JMSException e) {

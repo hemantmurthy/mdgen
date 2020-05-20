@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import hamy.mdgen.api.generator.base.Generator;
@@ -30,7 +31,7 @@ import hamy.mdgen.api.generator.nem12.NEM12CSVGenerator;
 
 @Path("/generator")
 public class GeneratorResource {
-	private static Logger log = Logger.getLogger(GeneratorResource.class);
+	private static Logger log = LogManager.getLogger(GeneratorResource.class);
 	
 	@POST
 	@Path("/xai")

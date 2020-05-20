@@ -14,6 +14,8 @@ public class JMSDestinationsXML {
 	@XmlElement(name="destination")
 	List<JMSDestinationXML> destinations = new ArrayList<>();
 	
+	public JMSDestinationsXML() {}
+	
 	public List<JMSDestinationXML> getDestinations() {
 		return destinations;
 	}
@@ -28,6 +30,8 @@ public class JMSDestinationsXML {
 		private String username;
 		private String password;
 		JMSQueuesXML queues;
+		
+		public JMSDestinationXML() {}
 		
 		public String getName() {
 			return name;
@@ -65,6 +69,8 @@ public class JMSDestinationsXML {
 	public static class JMSQueuesXML {
 		@XmlElement(name="queue")
 		private List<JMSQueueXML> queues;
+		
+		public JMSQueuesXML() {}
 
 		public List<JMSQueueXML> getQueues() {
 			return queues;
@@ -77,6 +83,8 @@ public class JMSDestinationsXML {
 	@XmlAccessorType (XmlAccessType.FIELD)
 	public static class JMSQueueXML {
 		private String name;
+		
+		public JMSQueueXML() {}
 		
 		public String getName() {
 			return name;

@@ -1,11 +1,14 @@
 package hamy.mdgen.api.generator.imd;
 
+import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+
+import org.apache.log4j.Logger;
 
 import hamy.mdgen.api.generator.base.Generator;
 import hamy.mdgen.api.generator.base.GeneratorInput;
@@ -15,6 +18,8 @@ import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;;
 
 public class IMDGenerator extends Generator {
+	private static Logger log = Logger.getLogger(IMDGenerator.class);
+	
 	protected String fileMdp;
 	protected String nem12FileName; 
 	protected ZonedDateTime nem12UpdateDateTime;
@@ -64,15 +69,18 @@ public class IMDGenerator extends Generator {
 	
 	protected void dispatchIMD(CMIMDSeeder imd) {
 		try {
-			Marshaller mar = CMIMDSeederJAXBContext.createMarshaller();
-			System.out.println("\nOutput");
-			mar.marshal(imd, System.out);
+			Marshaller m = CMIMDSeederJAXBContext.createMarshaller();
+			StringWriter out = new StringWriter();
+			m.marshal(imd, out);
+			log.debug("IMD Created");
+			log.debug(out.toString());
 		} catch (JAXBException e) {
-			e.printStackTrace();
+			log.warn("Unable to create IMD", e);
 		}
 	}
 
 	@Override
 	public void processEndOfFile(int numReadsProcessed) {
+		log.debug("End of file");
 	}
 }
