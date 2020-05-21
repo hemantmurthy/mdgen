@@ -72,7 +72,7 @@ public class XAIDestinationsFactory {
 	}
 	
 	@XmlRootElement(name="xaiDestinations")
-	//@XmlAccessorType (XmlAccessType.FIELD)
+	@XmlAccessorType(XmlAccessType.PROPERTY)
 	public static class XAIDestinations {
 		private Map<String, XAIDestination> destinations = new LinkedHashMap<>();
 		
@@ -86,19 +86,18 @@ public class XAIDestinationsFactory {
 			return this.destinations;
 		}
 		
-		@XmlRootElement
-		//@XmlAccessorType (XmlAccessType.FIELD)
+		@XmlAccessorType(XmlAccessType.PROPERTY)
 		public class XAIDestination {
 			private String url;
-			@XmlTransient
 			private String username;
-			@XmlTransient
 			private String password;
 			
 			public XAIDestination() {}
 			
 			public String getUrl() { return this.url; }
+			@XmlTransient
 			public String getUsername() { return this.username; }
+			@XmlTransient
 			public String getPassword() { return this.password; }
 			
 		}
