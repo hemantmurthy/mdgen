@@ -69,6 +69,8 @@ body {
     padding: 1em 1.5em;
 	box-shadow: 6px 6px 10px -2px #000000;
 	border-radius: 10px;
+	max-height: 85%;
+	overflow: auto;
 }
 
 .fade-enter-active, .fade-leave-active {

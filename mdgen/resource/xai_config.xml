@@ -2,7 +2,7 @@
 <xai-destinations>
     <destination>
         <name>DEV</name>
-        <url>http://10.175.121.154:7004//ouaf/XAIApp/xaiserver</url>
+        <url>http://10.175.121.154:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
         <name>ST</name>
@@ -13,11 +13,19 @@
         <url>http://10.175.102.67:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
+    	<name>UAT2</name>
+    	<url>http://10.175.102.99:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
     	<name>SVT</name>
+    	<url>http://mdmsrsrv.domain.internal/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>SVTO1</name>
     	<url>http://10.175.102.130:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
-    	<name>BAT</name>
-    	<url>http://10.175.102.98:7004/ouaf/XAIApp/xaiserver</url>
+    	<name>SVTO2</name>
+    	<url>http://10.175.102.131:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
 </xai-destinations>

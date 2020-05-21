@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -24,38 +25,44 @@ public class ConfigResource {
 		log.error("Error enabled");
 		log.fatal("Fatal enabled");
 	}
+	
 	@GET
 	@Path("/jms_destinations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public JMSDestinations getJMSDestinations() {
-		JMSDestinations jd = JMSDestinationsFactory.loadConfig();
-		//if(jd != null)
-		//return Response
-		//		.status(Response.Status.OK)
-		//		.entity(jd).build();
+	public Response getJMSDestinations() {
+		JMSDestinations jd = null;
+		try {
+			jd = JMSDestinationsFactory.loadConfig();
+		} catch(Exception e) {
+			log.error("Unable to load JMS Config", e);
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
 		
-		//else return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-		return jd;
+		if(jd != null)
+			return Response
+				.status(Response.Status.OK)
+				.entity(jd).build();
+		else 
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 	}
 
 	@GET
 	@Path("/xai_destinations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public XAIDestinations getXAIDestinations() {
+	public Response getXAIDestinations() {
 		XAIDestinations xd = null;
 		try {
 		xd = XAIDestinationsFactory.loadConfig();
 		} catch(Exception e) {
-			e.printStackTrace();
-			//Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+			log.error("Unable to load XAI Config", e);
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 		
-		//if(xd != null)
-		//return Response
-		//		.status(Response.Status.OK)
-		//		.entity(xd).build();
-		
-		//else return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-		return xd;
+		if(xd != null)
+			return Response
+				.status(Response.Status.OK)
+				.entity(xd).build();
+		else
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 	}
 }

@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement(name="jmsDestinations")
-@XmlAccessorType (XmlAccessType.FIELD)
+//@XmlAccessorType (XmlAccessType.FIELD)
 public class JMSDestinations {
 	Map<String, JMSDestination> destinations = new LinkedHashMap<>();
 	
@@ -26,7 +26,7 @@ public class JMSDestinations {
 	}
 	
 	@XmlRootElement
-	@XmlAccessorType (XmlAccessType.FIELD)
+	//@XmlAccessorType (XmlAccessType.FIELD)
 	public class JMSDestination {
 		String url;
 		@XmlTransient

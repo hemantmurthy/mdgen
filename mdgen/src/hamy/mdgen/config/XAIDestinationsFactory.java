@@ -72,7 +72,7 @@ public class XAIDestinationsFactory {
 	}
 	
 	@XmlRootElement(name="xaiDestinations")
-	@XmlAccessorType (XmlAccessType.FIELD)
+	//@XmlAccessorType (XmlAccessType.FIELD)
 	public static class XAIDestinations {
 		private Map<String, XAIDestination> destinations = new LinkedHashMap<>();
 		
@@ -87,7 +87,7 @@ public class XAIDestinationsFactory {
 		}
 		
 		@XmlRootElement
-		@XmlAccessorType (XmlAccessType.FIELD)
+		//@XmlAccessorType (XmlAccessType.FIELD)
 		public class XAIDestination {
 			private String url;
 			@XmlTransient

@@ -771,7 +771,7 @@ function loadXAIDestinations(vm) {
 				let xds = {
 					"destinations":{
 						"DEV":{
-							"url":"http://10.175.121.154:7004//ouaf/XAIApp/xaiserver",
+							"url":"http://10.175.121.154:7004/ouaf/XAIApp/xaiserver",
 							"username":null,
 							"password":null
 						},
