@@ -20,9 +20,9 @@ import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeederFault;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeederPortType;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeederService;
+import hamy.mdgen.config.XAIDestinations;
+import hamy.mdgen.config.XAIDestinations.XAIDestination;
 import hamy.mdgen.config.XAIDestinationsFactory;
-import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations;
-import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations.XAIDestination;
 
 public class IMDViaXAIGenerator extends IMDGenerator {
 	private static Logger log = Logger.getLogger(IMDViaXAIGenerator.class);

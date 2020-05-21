@@ -11,12 +11,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import hamy.mdgen.api.generator.imd.IMDViaJMSGeneratorInput;
 import hamy.mdgen.api.generator.imd.IMDViaXAIGeneratorInput;
+import hamy.mdgen.api.generator.nem12.NEM12AseXMLGeneratorInput;
 import hamy.mdgen.common.xml.LocalDateAdapter;
 import hamy.mdgen.common.xml.ZonedDateTimeAdapter;
 
 @XmlRootElement(name="generator-input")
-@XmlSeeAlso({IMDViaXAIGeneratorInput.class})
+@XmlSeeAlso({IMDViaXAIGeneratorInput.class, IMDViaJMSGeneratorInput.class, NEM12AseXMLGeneratorInput.class})
 @XmlAccessorType (XmlAccessType.FIELD)
 public class GeneratorInput {
 	private String mdp;

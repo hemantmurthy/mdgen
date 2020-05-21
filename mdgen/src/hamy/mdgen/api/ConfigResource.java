@@ -9,10 +9,10 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import hamy.mdgen.config.JMSDestinations;
 import hamy.mdgen.config.JMSDestinationsFactory;
-import hamy.mdgen.config.JMSDestinationsFactory.JMSDestinations;
+import hamy.mdgen.config.XAIDestinations;
 import hamy.mdgen.config.XAIDestinationsFactory;
-import hamy.mdgen.config.XAIDestinationsFactory.XAIDestinations;
 
 @Path("/config")
 public class ConfigResource {
