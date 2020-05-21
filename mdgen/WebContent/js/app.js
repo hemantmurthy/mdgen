@@ -727,8 +727,29 @@ function loadJMSDestinations(vm) {
 				if(jds.errors == null) {
 					vm.config.jmsDestinations = jds.destinations;
 					vm.config.jmsDestinationsLoaded = true;
-					console.log(jds);
 				}
+			} else {
+				let jds = { 
+					"destinations": { 
+						"MSGASVD4":{
+							"url":"tcp://msgasvd4.domain.internal:61616",
+							"username":null,
+							"password":null,
+							"queues": [
+								"ea.nem.b2b.external.mdms.mtrd.in1.21",
+								"ea.nem.b2b.external.mdms.mtrd.in2.21"]
+						},"MSGASVD5":{
+							"url":"tcp://msgasvd5.domain.internal:61616",
+							"username":null,
+							"password":null,
+							"queues":[
+								"ea.nem.b2b.external.mdms.mtrd.in.21"]
+						}
+					}
+				};
+				vm.config.jmsDestinations = jds.destinations;
+				vm.config.jmsDestinationsLoaded = true;
+				console.log(jds);
 			}
 		}
 	};
@@ -745,8 +766,35 @@ function loadXAIDestinations(vm) {
 				if(xds.errors == null) {
 					vm.config.xaiDestinations = xds.destinations;
 					vm.config.xaiDestinationsLoaded = true;
-					console.log(xds);
 				}
+			} else {
+				let xds = {
+					"destinations":{
+						"DEV":{
+							"url":"http://10.175.121.154:7004//ouaf/XAIApp/xaiserver",
+							"username":null,
+							"password":null
+						},
+						"ST":{
+							"url":"http://10.175.102.74:7004/ouaf/XAIApp/xaiserver",
+							"username":null,
+							"password":null
+						},
+						"SIT":{
+							"url":"http://10.175.102.67:7004/ouaf/XAIApp/xaiserver",
+							"username":null,
+							"password":null
+						},
+						"SVT":{
+							"url":"http://10.175.102.130:7004/ouaf/XAIApp/xaiserver",
+							"username":null,
+							"password":null
+						},
+					}
+				};
+				vm.config.xaiDestinations = xds.destinations;
+				vm.config.xaiDestinationsLoaded = true;
+				console.log(xds);
 			}
 		}
 	};
