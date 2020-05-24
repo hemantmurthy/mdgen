@@ -28,6 +28,10 @@ body {
 	font-size: 12px;
 }
 
+#footer a {
+	color: #dde6ee;
+}
+
 #app {
 	box-sizing: border-box;
 	padding-top: 6em;
