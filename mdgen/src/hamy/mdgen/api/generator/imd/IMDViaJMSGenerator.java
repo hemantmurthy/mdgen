@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 
 import hamy.mdgen.api.generator.format.CMIMDSeederJAXBContext;
 import hamy.mdgen.api.generator.format.xai.CMIMDSeeder.CMIMDSeeder;
+import hamy.mdgen.config.JMSDestination;
 import hamy.mdgen.config.JMSDestinations;
-import hamy.mdgen.config.JMSDestinations.JMSDestination;
 import hamy.mdgen.config.JMSDestinationsFactory;
 
 public class IMDViaJMSGenerator extends IMDGenerator {

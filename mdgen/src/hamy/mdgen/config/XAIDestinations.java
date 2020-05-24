@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-@XmlRootElement(name="xaiDestinations")
+@XmlRootElement(name="xai-destinations")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class XAIDestinations {
 	Map<String, XAIDestination> destinations = new LinkedHashMap<>();
@@ -21,21 +21,8 @@ public class XAIDestinations {
 	
 	public Map<String, XAIDestination> getDestinations() {
 		return this.destinations;
-	}
-	
-	@XmlAccessorType(XmlAccessType.PROPERTY)
-	public class XAIDestination {
-		String url;
-		String username;
-		String password;
-		
-		public XAIDestination() {}
-		
-		public String getUrl() { return this.url; }
-		@XmlTransient
-		public String getUsername() { return this.username; }
-		@XmlTransient
-		public String getPassword() { return this.password; }
-		
+	}	
+	void setDestinations(Map<String, XAIDestination> destinations) {
+		this.destinations = destinations;
 	}
 }

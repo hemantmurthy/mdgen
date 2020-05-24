@@ -23,11 +23,11 @@ public class XAIDestinationsFactory {
 			} catch(Exception e) {
 				log.error("Unable to load XAI Destinations config", e);
 				defaultXAIDestinations = new XAIDestinations();
-				XAIDestinations.XAIDestination dest = defaultXAIDestinations.new XAIDestination();
+				XAIDestination dest = new XAIDestination();
 				dest.url = "http://10.175.121.154:7004//ouaf/XAIApp/xaiserver";
 				defaultXAIDestinations.destinations.put("DEV", dest);
 				
-				dest = defaultXAIDestinations.new XAIDestination();
+				dest = new XAIDestination();
 				dest.url = "http://10.175.102.74:7004/ouaf/XAIApp/xaiserver";
 				defaultXAIDestinations.destinations.put("ST", dest);
 				
@@ -54,7 +54,7 @@ public class XAIDestinationsFactory {
 		
 		XAIDestinations xaids = new XAIDestinations();
 		for(XAIDestinationXML xdx : xml.getDestinations()) {
-			XAIDestinations.XAIDestination xd = xaids.new XAIDestination();
+			XAIDestination xd = new XAIDestination();
 			xd.url = xdx.getUrl() == null || "".equals(xdx.getUrl().trim()) ? null : xdx.getUrl().trim();
 			xd.username = xdx.getUsername() == null || "".equals(xdx.getUsername().trim()) ? null : xdx.getUsername().trim();
 			xd.password = xdx.getPassword() == null || "".equals(xdx.getPassword().trim()) ? null : xdx.getPassword().trim();

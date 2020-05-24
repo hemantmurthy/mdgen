@@ -29,7 +29,18 @@ public class ConfigResource {
 	@GET
 	@Path("/jms_destinations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getJMSDestinations() {
+	public Response getJMSDestinationsJSON() {
+		return getJMSDestinations();
+	}
+	
+	@GET
+	@Path("/jms_destinations/xml")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getJMSDestinationsXML() {
+		return getJMSDestinations();
+	}
+	
+	private Response getJMSDestinations() {
 		JMSDestinations jd = null;
 		try {
 			jd = JMSDestinationsFactory.loadConfig();
@@ -49,7 +60,18 @@ public class ConfigResource {
 	@GET
 	@Path("/xai_destinations")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getXAIDestinations() {
+	public Response getXAIDestinationsJSON() {
+		return getXAIDestinations();
+	}
+	
+	@GET
+	@Path("/xai_destinations/xml")
+	@Produces(MediaType.APPLICATION_XML)
+	public Response getXAIDestinationsXML() {
+		return getXAIDestinations();
+	}
+	
+	private Response getXAIDestinations() {
 		XAIDestinations xd = null;
 		try {
 		xd = XAIDestinationsFactory.loadConfig();

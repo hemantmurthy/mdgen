@@ -1,18 +1,10 @@
 package hamy.mdgen.config;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.log4j.Logger;
 
@@ -56,7 +48,7 @@ public class JMSDestinationsFactory {
 		
 		JMSDestinations jmsds = new JMSDestinations();
 		for(JMSDestinationXML jdx : xml.getDestinations()) {
-			JMSDestinations.JMSDestination jd = jmsds.new JMSDestination();
+			JMSDestination jd = new JMSDestination();
 			jd.url = jdx.getUrl() == null || "".equals(jdx.getUrl().trim()) ? null : jdx.getUrl().trim();
 			jd.username = jdx.getUsername() == null || "".equals(jdx.getUsername().trim()) ? null : jdx.getUsername().trim();
 			jd.password = jdx.getPassword() == null || "".equals(jdx.getPassword().trim()) ? null : jdx.getPassword().trim();
