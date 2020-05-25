@@ -366,7 +366,8 @@
 				</tr>
 			</tbody>
 		</table>
-		<div>
+		<div :class="{ error: jmsUsernameError }">
+			<span class="message">{{jmsUsernameError}}</span>
 			<label>User Name</label>
 			<input type="text" v-model="jmsUsername" autocomplete="off">
 		</div>

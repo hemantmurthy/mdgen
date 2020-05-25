@@ -640,6 +640,7 @@ var app = new Vue({
 							server: "",
 							serverError: "",
 							jmsUsername: "",
+							jmsUsernameError: "",
 							jmsPassword: ""
 						};
 					},
@@ -656,7 +657,7 @@ var app = new Vue({
 							if(this.server == "") this.serverError = "Please select a server";
 							else this.serverError = "";
 							
-							if(this.serverError == "") {
+							if(this.serverError == "" && this.jmsUsernameError == "") {
 								let parms = {};
 								parms.server = this.server;
 								if(this.jmsUsername.trim() != "") parms.username = this.jmsUsername.trim();

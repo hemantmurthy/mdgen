@@ -17,8 +17,12 @@ public class XAIDestination {
 	public String getUsername() { return this.username; }
 	@XmlTransient
 	public String getPassword() { return this.password; }
+	public boolean isCredentialsRequired() {
+		return this.username == null || this.username.trim() == "" || this.password == null || this.password == "";
+	}
 
 	void setUrl(String url) { this.url = url; }
 	void setUsername(String username) { this.username = username; }
 	void setPassword(String password) { this.password = password; }
+	void setCredentialsRequired(boolean value) {}
 }
