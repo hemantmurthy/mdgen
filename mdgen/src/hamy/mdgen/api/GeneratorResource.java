@@ -36,23 +36,19 @@ public class GeneratorResource {
 	@POST
 	@Path("/xai")
 	@Produces(MediaType.APPLICATION_JSON)
-	public GeneratorOutput createXAIGenerator(IMDViaXAIGeneratorInput input) {
-		IMDViaXAIGenerator generator = new IMDViaXAIGenerator(input, 10);
-		
-		GeneratorOutput output = new GeneratorOutput();
-		output.setInput(input);
-
-		String id = GeneratorRegistrar.add(generator);
-		log.info("XAI Generator created. ID: " + id + ", XAI Server: " + input.getServer());
-
+	public Response createXAIGenerator(IMDViaXAIGeneratorInput input) {
+		IMDViaXAIGenerator generator = null;
 		try {
-			generator.processAsynchronously();
-			output.setId(id);
+			generator = new IMDViaXAIGenerator(input, 10);
+			log.info("XAI Generator created, XAI Server: " + input.getServer());
 		} catch(Exception e) {
-			GeneratorRegistrar.remove(id);
+			GeneratorError error = new GeneratorError();
+			error.setErrorMessage(e.getMessage());
+			error.setInput(input);
+			return Response.status(Response.Status.OK).entity(error).build();
 		}
 		
-		return output;
+		return runGenerator(generator, input);
 	}
 	
 	@POST
@@ -62,6 +58,7 @@ public class GeneratorResource {
 		IMDViaJMSGenerator generator = null;
 		try {
 			generator = new IMDViaJMSGenerator(input);
+			log.info("JMS Generator created, JMS Server: " + input.getServer());
 		} catch(Exception e) {
 			GeneratorError error = new GeneratorError();
 			error.setErrorMessage(e.getMessage());
@@ -69,64 +66,68 @@ public class GeneratorResource {
 			return Response.status(Response.Status.OK).entity(error).build();
 		}
 		
-		GeneratorOutput output = new GeneratorOutput();
-		output.setInput(input);
-
-		String id = GeneratorRegistrar.add(generator);
-		log.info("JMS Generator created. ID: " + id + ", JMS Server: " + input.getServer());
-
-		try {
-			generator.processAsynchronously();
-			output.setId(id);
-		} catch(Exception e) {
-			GeneratorRegistrar.remove(id);
-		}
-		
-		return Response
-				.status(Response.Status.OK)
-				.entity(output).build();
+		return runGenerator(generator, input);
 	}
 	
 	@POST
 	@Path("/nem12csv")
 	@Produces(MediaType.APPLICATION_JSON)
-	public GeneratorOutput createNEM12CSVGenerator(GeneratorInput input) {
-		NEM12CSVGenerator generator = new NEM12CSVGenerator(input);
-		GeneratorOutput output = new GeneratorOutput();
-		output.setInput(input);
-
-		String id = GeneratorRegistrar.add(generator);
-		log.info("NEM12 CSV Generator created. ID: " + id);
-
+	public Response createNEM12CSVGenerator(GeneratorInput input) {
+		NEM12CSVGenerator generator = null;
 		try {
-			generator.processAsynchronously();
-			output.setId(id);
+			generator = new NEM12CSVGenerator(input);
+			log.info("NEM12 CSV Generator created");
 		} catch(Exception e) {
-			GeneratorRegistrar.remove(id);
+			GeneratorError error = new GeneratorError();
+			error.setErrorMessage(e.getMessage());
+			error.setInput(input);
+			return Response.status(Response.Status.OK).entity(error).build();
 		}
 		
-		return output;
+		return runGenerator(generator, input);
 	}
 	
 	@POST
 	@Path("/nem12asexml")
 	@Produces(MediaType.APPLICATION_JSON)
-	public GeneratorOutput createNEM12ASEXMLGenerator(GeneratorInput input) {
-		NEM12AseXMLGenerator generator = new NEM12AseXMLGenerator(input);
+	public Response createNEM12ASEXMLGenerator(GeneratorInput input) {
+		NEM12AseXMLGenerator generator = null;
+		try {
+			generator = new NEM12AseXMLGenerator(input);
+			log.info("NEM12 aseXML Generator created");
+		} catch(Exception e) {
+			GeneratorError error = new GeneratorError();
+			error.setErrorMessage(e.getMessage());
+			error.setInput(input);
+			return Response.status(Response.Status.OK).entity(error).build();
+		}
+		
+		return runGenerator(generator, input);
+	}
+	
+	private Response runGenerator(Generator generator, GeneratorInput input) {
 		GeneratorOutput output = new GeneratorOutput();
 		output.setInput(input);
 
 		String id = GeneratorRegistrar.add(generator);
-		log.info("NEM12 aseXML Generator created. ID: " + id);
+		log.info("Generator, id: " + id + "  added ...");
 
 		try {
 			generator.processAsynchronously();
+			log.info("Generator, id: " + id + "  started ...");
 			output.setId(id);
 		} catch(Exception e) {
 			GeneratorRegistrar.remove(id);
+			GeneratorError error = new GeneratorError();
+			error.setErrorMessage(e.getMessage());
+			error.setInput(input);
+			return Response.status(Response.Status.OK).entity(error).build();
 		}
 		
-		return output;
+		return Response
+				.status(Response.Status.OK)
+				.entity(output).build();
+		
 	}
 	
 	@GET

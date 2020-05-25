@@ -45,7 +45,13 @@ var app = new Vue({
 		loadConfig(this);
 	},
 	methods: {
-		setSize: function(size) {
+		reset: function() {
+			this.intervalSize = 0;
+			this.intervalLabels = [];
+			this.channels = [];
+			this.entries = [];
+		},
+		setIntervalSize: function(size) {
 			// Set the interval size ...
 			
 			if(this.intervalSize != size) {
@@ -124,18 +130,48 @@ var app = new Vue({
 		}
 	},
 	components: {
-		"select-size": {
-			template: "#select-option-template",
-			props: ["config"],
+		"select-int-size": {
+			template: "#select-int-size-template",
+			props: ["config", "intervalSize"],
 			data: function() {
 				return {
+					showConfirmReset: false,
 					size: "",
 					error: ""
 				};
 			},
 			methods: {
 				setSize: function() {
-					this.$emit("set-size", this.size);
+					if(this.size == "")
+						this.error = "Please select an interval size";
+					else {
+						this.error = "";
+						this.$emit("set-int-size", this.size);
+					}
+				},
+				resetSize: function() {
+					this.showConfirmReset = true;
+				},
+				confirmReset: function() {
+					this.showConfirmReset = false;
+					this.size = 0;
+					this.$emit("reset-int-size");
+				},
+				cancelReset: function() {
+					this.showConfirmReset = false;
+				}
+			},
+			components: {
+				"confirm-reset-size": {
+					template: "#confirm-reset-int-size-template",
+					methods: {
+						confirm: function() {
+							this.$emit("confirm");
+						},
+						cancel: function() {
+							this.$emit("cancel");
+						}
+					}
 				}
 			}
 		},
@@ -158,7 +194,7 @@ var app = new Vue({
 		        	this.error = "";
 		        	
 		        	if(this.id == "") {
-	        			this.error = "NMI Suffix cannot be empty";
+	        			this.error = "Please enter a NMI Suffix (like E1, B3, etc.) or a prefix (like E, B, K, etc.)";
 	        			return;
 		        	}
 		        	
@@ -319,9 +355,10 @@ var app = new Vue({
 						},
 						performAction: function() {
 							this.mdpError = this.mdp.trim() == "" ? "Select an MDP" : null;
-							this.nmiError = NMI_RE.test(this.nmi.trim()) ? null : "NMI invalid";
-							this.meterSerialNumberError = this.meterSerialNumber.trim() == "" ? "Meter Serial Number is required" : null;
-							this.nmiSuffixError = this.nmiSuffix.trim() == "" ? "NMI Suffix is required" :
+							this.nmiError = this.nmi.trim() == "" ? "Enter a NMI" : 
+								NMI_RE.test(this.nmi.trim()) ? null : "NMI invalid";
+							this.meterSerialNumberError = this.meterSerialNumber.trim() == "" ? "Enter a Meter Serial Number" : null;
+							this.nmiSuffixError = this.nmiSuffix.trim() == "" ? "Enter a NMI Suffix" :
 								NMI_SUFFIX_RE.test(this.nmiSuffix.trim().toUpperCase()) ? null : "NMI Suffix is invalid";
 							this.registerIdError = this.registerId.trim() == "" || REG_ID_RE.test(this.registerId.trim()) ? null : "Register ID is invalid"; 
 
@@ -329,24 +366,24 @@ var app = new Vue({
 							let sd = null;
 							let ed = null;
 							if(this.startDate.trim() == "") 
-								this.startDateError = "Date is required";
+								this.startDateError = "Enter a Start Date";
 							else if(!DATE_RE.test(this.startDate.trim()))
-								this.startDateError = "Date is invalid";
+								this.startDateError = "Start Date is invalid";
 							else try {
 								sd = new Date(this.startDate.substring(0, 4), this.startDate.substring(5, 7), this.startDate.substring(8, 10));
 							} catch(err) {
-								this.startDateError = "Date is invalid";
+								this.startDateError = "Start Date is invalid";
 							}
 							
 							this.endDateError = null;
 							if(this.endDate.trim() == "") 
-								this.endDateError = "Date is required";
+								this.endDateError = "Enter an End Date";
 							else if(!DATE_RE.test(this.endDate.trim()))
-								this.endDateError = "Date is invalid";
+								this.endDateError = "End Date is invalid";
 							else try {
 								ed = new Date(this.endDate.substring(0, 4), this.endDate.substring(5, 7), this.endDate.substring(8, 10));
 							} catch(err) {
-								this.endDateError = "Date is invalid";
+								this.endDateError = "End Date is invalid";
 							}
 							
 							if(this.startDateError == null && this.endDateError == null && ed < sd)
@@ -531,20 +568,34 @@ var app = new Vue({
 			data: function() {
 				return {
 					nem12UpdateDateTime: new Date().toISOString().substring(0, 16),
+					nem12UpdateDateTimeError: "",
 					nem12FileName: deriveFileName("MDGEN_"),
+					nem12FileNameError: "",
 					showDeliveryMethods: false,
 					deliveryMethods: {
 						"nem12": {label: "NEM12 File", component: "nem12-delivery" },
 						"imd-via-jms": {label: "IMD via JMS", component: "imd-via-jms-delivery" },
 						"imd-via-xai": {label: "IMD via XAI", component: "imd-via-xai-delivery" }
 					},
+					error: "",
 					selectedMethod: null
 				} 
 			},
 			methods: {
 				show: function() {
-					this.showDeliveryMethods = true;
-					this.select("nem12");
+					if(this.nem12FileName == "" || this.nem12FileName.trim() == "")
+						this.nem12FileNameError = "Please enter a valid NEM12 File Name";
+					else this.nem12FileNameError = "";
+					
+					if(this.entries.length == 0)
+						this.error = "Oye! There are no entries to process buddy";
+					else
+						this.error = "";
+					
+					if(this.nem12FileNameError == "" && this.error == "") {
+						this.showDeliveryMethods = true;
+						this.select("nem12");
+					}
 				},
 				select: function(method) {
 					this.selectedMethod = method;
@@ -587,6 +638,7 @@ var app = new Vue({
 						return {
 							servers: this.config.jmsDestinations == undefined ? {} : this.config.jmsDestinations,
 							server: "",
+							serverError: "",
 							jmsUsername: "",
 							jmsPassword: ""
 						};
@@ -601,12 +653,17 @@ var app = new Vue({
 					},
 					methods: {
 						generate: function() {
-							let parms = {};
-							parms.server = this.server;
-							if(this.jmsUsername.trim() != "") parms.username = this.jmsUsername.trim();
-							if(this.jmsPassword.trim() != "") parms.password = this.jmsPassword.trim();
+							if(this.server == "") this.serverError = "Please select a server";
+							else this.serverError = "";
 							
-							this.$emit("generate-imd-via-jms", parms);
+							if(this.serverError == "") {
+								let parms = {};
+								parms.server = this.server;
+								if(this.jmsUsername.trim() != "") parms.username = this.jmsUsername.trim();
+								if(this.jmsPassword.trim() != "") parms.password = this.jmsPassword.trim();
+							
+								this.$emit("generate-imd-via-jms", parms);
+							}
 						},
 						cancel: function() {
 							this.$emit("cancel");
@@ -620,6 +677,7 @@ var app = new Vue({
 						return {
 							servers: this.config.xaiDestinations == undefined ? {} : this.config.xaiDestinations,
 							server: "",
+							serverError: "",
 							xaiUsername: "",
 							xaiPassword: ""
 						};
@@ -631,12 +689,17 @@ var app = new Vue({
 					},
 					methods: {
 						generate: function() {
-							let parms = {};
-							parms.server = this.server;
-							if(this.xaiUsername.trim() != "") parms.username = this.xaiUsername.trim();
-							if(this.xaiPassword.trim() != "") parms.password = this.xaiPassword.trim();
+							if(this.server == "") this.serverError = "Please select a server";
+							else this.serverError = "";
 							
-							this.$emit("generate-imd-via-xai", parms);
+							if(this.serverError == "") {
+								let parms = {};
+								parms.server = this.server;
+								if(this.xaiUsername.trim() != "") parms.username = this.xaiUsername.trim();
+								if(this.xaiPassword.trim() != "") parms.password = this.xaiPassword.trim();
+								
+								this.$emit("generate-imd-via-xai", parms);
+							}
 						},
 						cancel: function() {
 							this.$emit("cancel");
@@ -649,25 +712,34 @@ var app = new Vue({
 					data: function() {
 						return {
 							mdp: "",
-							targetParticipant: this.config.frmps[0],
-							targetRole: this.config.participantRoles[0]
+							mdpError: "",
+							targetParticipant: this.config.targetParticipants[0],
+							targetParticipantError: "",
+							targetRole: this.config.participantRoles[0],
+							targetRoleError: ""
 						};
 					},
 					created: function() {
 						this.mdp = determineMdp(this.entries);
 					},
 					methods: {
-						/*mdpChanged: function() {
-							if(this.mdp != "")
-								this.nem12FileName = deriveFileName(this.mdp);
-						},*/
 						downloadNem12: function() {
-							this.$emit("generate-nem12-csv", {
-								mdp: this.mdp,
-								mdpError: "",
-								targetParticipant: this.targetParticipant,
-								targetRole: this.targetRole
-							});
+							if(this.mdp == "") this.mdpError = "Please select an MDP";
+							else this.mdpError = "";
+							
+							if(this.targetParticipant == "") this.targetParticipantError = "Please select an target participant";
+							else this.targetParticipantError = "";
+							
+							if(this.mdp == "") this.mdpError = "Please select an MDP";
+							else mdpError = "";
+							
+							if(this.mdpError == "" && this.targetParticipantError == "" && this.targetRoleError == "")
+								this.$emit("generate-nem12-csv", {
+									mdp: this.mdp,
+									//mdpError: "",
+									targetParticipant: this.targetParticipant,
+									targetRole: this.targetRole
+								});
 						},
 						downloadNem12AseXML: function() {
 							this.$emit("generate-nem12-asexml", {
@@ -813,6 +885,7 @@ function invokeAPI(apiUri, additionalParms, vm, callback) {
 	if(vm.generator.status != null) return "Generator already in progress";
 	
 	vm.generator.id = null;
+	vm.generator.status = null;
 	vm.generator.numRecordsToProcess = 0;
 	vm.generator.numRecordsProcessed = 0;
 	vm.generator.errorMessage = null;

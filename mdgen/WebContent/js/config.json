@@ -1,10 +1,9 @@
 {
-	"intervals": [ 
-		{ "size": 5, "label": "5 mins" },
-		{ "size": 15, "label": "15 mins" },
-		{ "size": 30, "label": "30 mins" }
-	],
-	
+	"intervals" : {
+		"30": "30 mins",
+		"15": "15 mins",
+		"5": "5 mins"
+	},
 	"uoms": [
 		"KWH", "WH", "KW", "W", "KVARH", "VARH", "KVAR", "VAR", "V"
 	],
@@ -121,7 +120,7 @@
 		"LNSP"
 	],
 	
-	"frmps": [
+	"targetParticipants": [
 		"EASTENGY",
 		"ENGYAUST"
 	],

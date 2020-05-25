@@ -15,9 +15,11 @@
 		<div id="app-loading-pane" v-if="!configLoaded">
 			<img src="img/loading_spinner.gif"/>
 		</div>
-		<select-size
-			:config="config" 
-			@set-size="setSize"></select-size>
+		<select-int-size
+			:config="config" :interval-size="intervalSize"
+			@set-int-size="setIntervalSize"
+			@reset-int-size="reset">
+		</select-int-size>
 		<div v-if="intervalSize">
 			<manage-channels 
 				:config="config" :channels="channels" :interval-size="intervalSize" :interval-labels="intervalLabels"
@@ -58,20 +60,42 @@
 	</transition>
 	</script>
 
-	<script type="text/x-template" id="select-option-template">
+	<script type="text/x-template" id="select-int-size-template">
 	<div class="section">
+		<confirm-reset-size v-if="showConfirmReset"
+			@confirm="confirmReset"
+			@cancel="cancelReset"></confirm-reset-size>
 		<h2>Set the interval size</h2>
 		<p>Set the interval size for meter data to be generated. Data for all meters and channels will be generated with this interval size</p>
 		<div class="input-section">
-			<div></div>
-    		<label>Size</label>
-    		<select v-model="size">
-        	<option v-for="int in config.intervals" :value="int.size">{{int.label}}</option>
+		<div :class="{ error: error }">
+			<span class="message">{{error}}</span>
+    		<label>Interval Size</label>
+    		<select v-if="!intervalSize" v-model="size">
+        	<option v-for="(label, value) in config.intervals" :value="value">{{label}}</option>
 			</select>
-			<button @click="setSize">Set Size</button>
+			<span v-if="intervalSize">{{config.intervals[size]}} </span>
+			<button v-if="!intervalSize" @click="setSize">Set Size</button>
+			<button v-if="intervalSize" @click="resetSize">Reset Interval Size</button>
+		</div>
 		</div>
 	</div>
 	</script> 
+	
+	<script type="text/x-template" id="confirm-reset-int-size-template">
+	<modal-popup container-class="confirm-reset-int-size">	
+		<h2>Confirm Reset Interval Size</h2>
+		<div class="body">
+			<p>Are you sure you want to reset the interval size?</p>
+			<p> This will reset the tool, and all templates and meter entries will be lost and will have to be re-entered.</p>
+		</div>
+		<div class="actions">
+			<button @click="confirm">Yes</button>
+			<button @click="cancel">No</button>
+		</div>
+	</modal-popup>
+	</script>
+	
 	<script type="text/x-template" id="manage-channels-template">
 	<div class="section">
 		<h2>Manage Channel Templates</h2>
@@ -177,7 +201,7 @@
 			</tbody>	
 			<tbody v-else>
 				<tr>
-					<td colspan="9">It's rather empty in here right now, isn't it?</td>
+					<td colspan="9">It's rather empty in here, isn't it?</td>
 				</tr>
 			</tbody>	
 		</table>
@@ -279,15 +303,19 @@
 	<div>
 	<div class="section">
 		<h2>Generate Data</h2>
-		<div>
+		<div :class="{ error: error }">
+			<span class="message">{{error}}</span>
+		</div>
+		<div :class="{ error: nem12UpdateDateTimeError }">
+			<span class="message">{{nem12UpdateDateTimeError}}</span>
 			<label>NEM12 Update Date Time</label>
 			<input type="datetime-local" v-model="nem12UpdateDateTime">
 		</div>
-		<div>
+		<div :class="{ error: nem12FileNameError }">
+			<span class="message">{{nem12FileNameError}}</span>
 			<label>NEM12 File Name</label>
 			<input type="text" v-model="nem12FileName">
 		</div>
-
 		<button @click="show">Select a Delivery Method</button>
 	</div>
 	<modal-popup v-if="showDeliveryMethods">	
@@ -316,7 +344,8 @@
 	<div class="tab-content">
 		<div class="tab-body">
 		<p>Select the JMS Server to send IMDs to below and click the Generate button</p>
-		<div>
+		<div :class="{ error: serverError }">
+			<span class="message">{{serverError}}</span>
 			<label>JMS Server</label>
 			<select v-model="server">
 				<option value="">Select a server below</option>
@@ -357,7 +386,8 @@
 	<div class="tab-content">
 		<div class="tab-body">
 		<p>Select the MDM Server to send IMDs to below and click the Generate button</p>
-		<div>
+		<div :class="{ error: serverError }">
+			<span class="message">{{serverError}}</span>
 			<label>MDM Server</label>
 			<select v-model="server">
 				<option value="">Select a server below</option>
@@ -392,21 +422,26 @@
 	<div class="tab-content">
 		<div class="tab-body">
 		<p>Download a NEL12 file. Enter details below and select the format of NEM12 to download</p>
-		<div>
-			<label>MDP</label><inp
+		<div :class="{ error: mdpError }">
+			<span class="message">{{mdpError}}</span>
+			<label>MDP</label>
 			<select v-model="mdp">
 				<option v-for="mdp in config.mdps" :value="mdp">{{mdp}}</option>
 			</select>
 		</div>
-		<div>
+		<div :class="{ error: targetParticipantError }">
+			<span class="message">{{targetParticipantError}}</span>
 			<label>To Role</label><inp
 			<select v-model="targetRole">
 				<option v-for="role in config.participantRoles" :value="role">{{role}}</option>
 			</select>
 		</div>
-		<div>
-			<label>To Participant</label><inp
-			<input type="text" v-model="targetParticipant">
+		<div :class="{ error: targetRoleError }">
+			<span class="message">{{targetRoleError}}</span>
+			<label>To Participant</label>
+			<select v-model="targetParticipant">
+				<option v-for="participant in config.targetParticipants" :value="participant">{{participant}}</option>
+			</select>
 		</div>
 		</div>
 		<div class="actions">
