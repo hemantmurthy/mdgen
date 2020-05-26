@@ -116,9 +116,9 @@ var app = new Vue({
 				}
 			});
 		},
-		startPollingGeneratorStatus: function(callback) {
-			checkStatus(this, callback);
-		},
+		//startPollingGeneratorStatus: function(callback) {
+		//	checkStatus(this, callback);
+		//},
 		closeGeneratorStatus: function() {
 			this.generator.status = null;
 			this.showGeneratorStatus = false;
@@ -914,7 +914,8 @@ function invokeAPI(apiUri, additionalParms, vm, callback) {
 				if(response.id) {
 					vm.generator.id = response.id;
 					vm.generator.status = "Request submitted";
-					vm.startPollingGeneratorStatus(callback);
+					//vm.startPollingGeneratorStatus(callback);
+					setTimeout(function() { checkStatus(vm, callback); }, 500);
 				} else {
 					vm.generator.id = null;
 					vm.generator.status = "Error";

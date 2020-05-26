@@ -458,7 +458,8 @@
 		<h2>Generator Status</h2>
 		<div style="float: left">
 		<div class="icon">
-			<img v-if="generator.status == 'In Progress' || generator.status == 'Building Request'" src="img/working.gif"></img>
+			<img v-if="generator.status == 'In Progress' || generator.status == 'Building Request' || generator.status == 'Request submitted'" 
+				src="img/working.gif"></img>
 			<img v-else src="img/completed.gif"></img>
 		</div>
 		<div class="body">
