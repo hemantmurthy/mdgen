@@ -136,6 +136,11 @@ table.channel .cell-row .nmi-suffix {
 	margin-right: 0.4em;
 }
 
+#channel-template-container {
+	height: 30em;
+	overflow: auto;
+}
+
 label {
 	display: inline-block;
 	width: 7em;

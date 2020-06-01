@@ -110,6 +110,7 @@
             <button @click="addChannel(false)">Add Zero Channel</button>
 		</div>
 
+		<div id="channel-template-container">
 		<table class="channel">
 		    <thead>
 		        <tr>
@@ -134,11 +135,11 @@
 		            <td v-for="(channel, chi) in channels">
 						<input class="read" type="number" v-model="$parent.channels[chi].intervals[inti].value" size="5" @change="checkValue(chi, inti)" :class="{ error: channels[chi].intervals[inti].valError}">
 						<input class="quality" type="text" v-model="$parent.channels[chi].intervals[inti].quality" size="2" @change="checkQuality(chi, inti)" :class="{ error: channels[chi].intervals[inti].qualError}">
-
 					</td>
 		        </tr>
 		    </tbody>
 		</table>
+		</div>
 	</div>   
 	</script>
 
