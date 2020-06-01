@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
 	<title>Meter Data Generator v1.0</title>
 	<link rel="stylesheet" type="text/css" href="css/mdgen.css">
     <script src="lib/vue.js"></script>
@@ -103,7 +105,7 @@
 		<div class="input-section" :class="{error: error}">
 			<span class="message">{{error}}</span>
 			<label>NMI Suffix</label>
-			<input v-model="id" type="text">
+			<input v-model="nmiSuffix" type="text">
             <button @click="addChannel(true)">Add</button>
             <button @click="addChannel(false)">Add Zero Channel</button>
 		</div>

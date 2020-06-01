@@ -27,9 +27,9 @@ var app = new Vue({
 	el: "#app",
 	data: {
 		config: {}, // Configuration for the application
-		configLoaded: false, // Flag to indicate that configuration is loaded
-		intervalSize: 0, // The size of interval data that will be generated
-		intervalLabels: [], // Interval Labels
+		configLoaded: false, 
+		intervalSize: 0,
+		intervalLabels: [], 
 		channels: [], // The channel templates
 		entries: [], // The NMIs, Meters and Channels for which data is to be generated
 		showGeneratorStatus: false,
@@ -72,10 +72,46 @@ var app = new Vue({
 				
 				// Reset channels (as interval size has changed)
 				this.channels.splice(0, this.channels.length);
+				
+				// Add some common channels
+				this.config.initialTemplates.forEach((x) => {
+					this.addChannel({
+						nmiSuffix: x,
+						useProfile: true
+					});
+				})
 			}
 		},
-		addChannel: function(channelTemplate) {
-			this.channels.push(channelTemplate);
+		addChannel: function(channel) {
+            // Add a channel and fill values ...
+            let intVals = new Array(this.intervalLabels.length);
+            
+            // Check if profile found for suffix (and if not, then for first letter of suffix) ...
+            let profile = this.config.profiles[channel.nmiSuffix];
+            if(!profile)
+            	profile = this.config.profiles[channel.nmiSuffix.substring(0, 1)];
+            
+            if(channel.useProfile && profile) {
+            	// If found, then fill values based on profile
+            	let nita = this.intervalSize / 5; // Number of intervals to add
+            	let v = 0;
+	            for(let i = 0; i < intVals.length; ++i) {
+	            	v = 0;
+	            	for(let ni = 0; ni < nita; ++ni)
+	            		v += profile.values[i * nita + ni];
+	            	
+	                intVals[i] = { value: v, quality: "A", valError: false, qualError: false };
+	            }
+            } else {
+	            for(let i = 0; i < intVals.length; ++i) 
+	                intVals[i] = { value: 0, quality: "A", valError: false, qualError: false };
+            }
+
+			this.channels.push({
+            	nmiSuffix: channel.nmiSuffix, 
+           		uom: this.config.nmiSuffixUom[channel.nmiSuffix.substring(0,1)],
+           		intervals: intVals
+            });
 		},
 		deleteChannel: function(index) {
         	this.channels.splice(index, 1);
@@ -116,9 +152,6 @@ var app = new Vue({
 				}
 			});
 		},
-		//startPollingGeneratorStatus: function(callback) {
-		//	checkStatus(this, callback);
-		//},
 		closeGeneratorStatus: function() {
 			this.generator.status = null;
 			this.showGeneratorStatus = false;
@@ -185,7 +218,7 @@ var app = new Vue({
 			],
 			data: function() {
 				return {
-					id : "",
+					nmiSuffix : "",
 					error: ""
 				};
 			},
@@ -193,50 +226,24 @@ var app = new Vue({
 		        addChannel: function(useProfile) {
 		        	this.error = "";
 		        	
-		        	if(this.id == "") {
+		        	if(this.nmiSuffix == "") {
 	        			this.error = "Please enter a NMI Suffix (like E1, B3, etc.) or a prefix (like E, B, K, etc.)";
 	        			return;
 		        	}
 		        	
-		        	let newId = this.id.toUpperCase();
+		        	let newId = this.nmiSuffix.toUpperCase();
 		        	for(let i = 0; i < this.channels.length; ++i)
 		        		if(this.channels[i].nmiSuffix == newId) {
 		        			this.error = "NMI Suffix " + newId + " already exists";
 		        			return;
 		        		}
 		        	
-		            // Add a channel and fill values ...
-		            let intVals = new Array(this.intervalLabels.length);
-		            
-		            // Check if profile found for suffix (and if not, then for first letter of suffix) ...
-		            let profile = this.config.profiles[newId];
-		            if(!profile)
-		            	profile = this.config.profiles[newId.substring(0, 1)];
-		            
-		            if(useProfile && profile) {
-		            	// If found, then fill values based on profile
-		            	let nita = this.intervalSize / 5; // Number of intervals to add
-		            	let v = 0;
-			            for(let i = 0; i < intVals.length; ++i) {
-			            	v = 0;
-			            	for(let ni = 0; ni < nita; ++ni)
-			            		v += profile.values[i * nita + ni];
-			            	
-			                intVals[i] = { value: v, quality: "A", valError: false, qualError: false };
-			            }
-		            } else {
-			            for(let i = 0; i < intVals.length; ++i) 
-			                intVals[i] = { value: 0, quality: "A", valError: false, qualError: false };
-		            }
-		
-		            
 		            this.$emit("add-channel", {
 		                nmiSuffix: newId,
-		                uom: this.config.nmiSuffixUom[newId.substring(0,1)],
-		                intervals: intVals
+		                useProfile: useProfile
 		            });
 		            
-		            this.id = "";
+		            this.nmiSuffix = "";
 		        },
 		        
 		        deleteChannel: function(index) {
@@ -914,7 +921,6 @@ function invokeAPI(apiUri, additionalParms, vm, callback) {
 				if(response.id) {
 					vm.generator.id = response.id;
 					vm.generator.status = "Request submitted";
-					//vm.startPollingGeneratorStatus(callback);
 					setTimeout(function() { checkStatus(vm, callback); }, 500);
 				} else {
 					vm.generator.id = null;
@@ -1003,15 +1009,13 @@ function getISODate(date) {
 }
 
 function determineMdp(entries) {
-	let mdp = "";
-	for(let i = 0; i < entries.length; ++i) {
-		if(mdp == "") mdp = entries[i].mdp
-		else if(mdp != entries[i].mdp) {
-			mdp = "";
-			break;
-		}
-	}
-	return mdp;
+	let mdps = entries.reduce((acc, entry) => {
+		if(entry.mdp && !acc.includes(entry.mdp)) 
+			acc.push(entry.mdp); 
+		return acc;
+	}, []);
+	if(mdps.length == 1) return mdps[0];
+	else return "";
 }
 
 function deriveFileName(prefix) {

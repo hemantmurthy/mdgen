@@ -1,9 +1,10 @@
 {
-	"intervals" : {
+	"intervals" : { 
 		"30": "30 mins",
 		"15": "15 mins",
 		"5": "5 mins"
 	},
+	
 	"uoms": [
 		"KWH", "WH", "KW", "W", "KVARH", "VARH", "KVAR", "VAR", "V"
 	],
@@ -14,6 +15,8 @@
 		"K": "KW",
 		"Q": "KW"
 	},
+	
+	"initialTemplates": ["E", "B", "K", "Q"],
 	
 	"qualityFlags" : [
 		"A",
