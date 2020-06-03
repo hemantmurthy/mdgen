@@ -11,10 +11,22 @@ body {
 	box-sizing: border-box;
 	position: fixed; 
 	top: 0px; left: 0px;
-	padding: 0.5em 1em;
+	padding: 1em 1em;
 	width: 100%;
 	color: #ffffff;
 	background-color: #0086c6
+}
+
+#header h1 {
+	margin: 0px;
+}
+
+#logo {
+	box-sizing: border-box;
+	margin: 0em 1em;
+	width: 2em;
+	height: 2em;
+	box-shadow: 0.1em 0.1em 0.3em black
 }
 
 #footer {
