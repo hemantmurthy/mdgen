@@ -359,12 +359,14 @@
 			<tbody>
 				<tr>
 					<th>Server URL</th>
-					<td>{{serverUrl}}</td>
+					<td>{{selectedServer.url}}</td>
 				</tr>
 				<tr>
 					<th>Queues</th>
 					<td>
-						<div v-for="q in serverQueues">{{q}}</div>
+						<div v-for="q in selectedServer.queues">
+						<input type="checkbox" :value="q" v-model="targetQueues">{{q}}
+						</div>
 					</td>
 				</tr>
 			</tbody>
@@ -402,11 +404,12 @@
 			<tbody>
 				<tr>
 					<th>Server URL</th>
-					<td>{{serverUrl}}</td>
+					<td>{{selectedServer.url}}</td>
 				</tr>
 			</tbody>
 		</table>
-		<div>
+		<div :class="{ error: xaiUsernameError }">
+			<span class="message">{{xaiUsernameError}}</span>
 			<label>User Name</label>
 			<input type="text" v-model="xaiUsername" autocomplete="off">
 		</div>

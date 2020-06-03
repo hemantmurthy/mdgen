@@ -12,14 +12,65 @@
             <queue>
                 <name>ea.nem.b2b.external.mdms.mtrd.in2.21</name>
             </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in3.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in4.21</name>
+            </queue>
         </queues>
     </destination>
     <destination>
         <name>MSGASVD5</name>
         <url>tcp://msgasvd5.domain.internal:61616</url>
         <queues>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in1.21</name>
+            </queue>
             <queue>
-                <name>ea.nem.b2b.external.mdms.mtrd.in.21</name>
+                <name>ea.nem.b2b.external.mdms.mtrd.in2.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in3.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in4.21</name>
+            </queue>
+        </queues>
+    </destination>
+    <destination>
+        <name>MSGASVD6</name>
+        <url>tcp://msgasvd6.domain.internal:61616</url>
+        <queues>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in1.21</name>
+            </queue>
+            <queue>
+                <name>ea.nem.b2b.external.mdms.mtrd.in2.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in3.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in4.21</name>
+            </queue>
+        </queues>
+    </destination>
+    <destination>
+        <name>MSMDMSJMVU1</name>
+        <url>tcp://msmdmsjmvu1.domain.internal:61616</url>
+        <queues>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in1.21</name>
+            </queue>
+            <queue>
+                <name>ea.nem.b2b.external.mdms.mtrd.in2.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in3.21</name>
+            </queue>
+            <queue> 
+                <name>ea.nem.b2b.external.mdms.mtrd.in4.21</name>
             </queue>
         </queues>
     </destination>

@@ -193,6 +193,8 @@ div.tab-content {
 }
 
 div.tab-content div.tab-body {
+	box-sizing: border-box;
+	width: 100%;
 	position: absolute;
 	top: 0px;
 	bottom: 4em;

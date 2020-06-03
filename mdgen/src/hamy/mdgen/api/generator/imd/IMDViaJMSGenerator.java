@@ -1,6 +1,7 @@
 package hamy.mdgen.api.generator.imd;
 
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -34,12 +35,25 @@ public class IMDViaJMSGenerator extends IMDGenerator {
 	public IMDViaJMSGenerator(IMDViaJMSGeneratorInput input) {
 		super(input);
 		
-		if(input.getServer() == null || "".equals(input.getServer().trim()))
+		String server = input.getServer() == null ? "" : input.getServer().trim();
+		if("".equals(server))
 			throw new RuntimeException("JMS Server not specified or is blank");
 		
-		JMSDestination jd = jmsDestinations.get(input.getServer().trim());
+		JMSDestination jd = jmsDestinations.get(server);
 		if(jd == null)
-			throw new RuntimeException("JMS Server not recognised. Value specified is " + input.getServer().trim());
+			throw new RuntimeException("JMS Server not recognised. Value specified is " + server);
+		
+		List<String> confQueues = jd.getQueues();
+		List<String> targetQueues = null;
+		
+		if(input.getQueues().size() > 0) {
+			for(String queue : input.getQueues())
+				if(!confQueues.contains(queue))
+					throw new RuntimeException("Queue " + queue + " not configured on server " + server);
+			
+			targetQueues = input.getQueues();
+		} else
+			throw new RuntimeException("No target queues selected for server " + server);
 		
 		try {
 			log.trace("Creating connection factory for ActiveMQ server ...");
@@ -58,9 +72,9 @@ public class IMDViaJMSGenerator extends IMDGenerator {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			
 			log.trace("Creating pool of message producers ...");
-			producers = new MessageProducer[jd.getQueues().size()];
+			producers = new MessageProducer[targetQueues.size()];
 			for(int i = 0; i < producers.length; ++i)
-				producers[i] = session.createProducer(session.createQueue(jd.getQueues().get(i)));
+				producers[i] = session.createProducer(session.createQueue(targetQueues.get(i)));
 			
 			log.debug("Connected to Active MQ Server");
 		} catch (JMSException e) {

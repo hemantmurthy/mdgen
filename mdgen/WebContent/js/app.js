@@ -594,10 +594,10 @@ var app = new Vue({
 						this.nem12FileNameError = "Please enter a valid NEM12 File Name";
 					else this.nem12FileNameError = "";
 					
-					if(this.entries.length == 0)
-						this.error = "Oye! There are no entries to process buddy";
-					else
-						this.error = "";
+					//if(this.entries.length == 0)
+					//	this.error = "Oye! There are no entries to process buddy";
+					//else
+					//	this.error = "";
 					
 					if(this.nem12FileNameError == "" && this.error == "") {
 						this.showDeliveryMethods = true;
@@ -646,17 +646,19 @@ var app = new Vue({
 							servers: this.config.jmsDestinations == undefined ? {} : this.config.jmsDestinations,
 							server: "",
 							serverError: "",
+							targetQueues: [],
 							jmsUsername: "",
 							jmsUsernameError: "",
 							jmsPassword: ""
 						};
 					},
 					computed: {
-						serverUrl: function() {
-							return this.servers[this.server] === undefined ? "" : this.servers[this.server].url;
-						},
-						serverQueues: function() {
-							return this.servers[this.server] === undefined ? "" : this.servers[this.server].queues;
+						selectedServer: function() {
+							let server = this.servers[this.server] === undefined ? 
+								{ url: "", queues: [], credentialsRequired: true } : 
+								this.servers[this.server];
+							this.targetQueues = [... server.queues];
+							return server;
 						}
 					},
 					methods: {
@@ -664,9 +666,16 @@ var app = new Vue({
 							if(this.server == "") this.serverError = "Please select a server";
 							else this.serverError = "";
 							
+							if(this.selectedServer.credentialsRequired && (this.jmsUsername.trim() == "" || this.jmsPassword.trim() == ""))
+								this.jmsUsernameError = "User Name and Password are required";
+							else 
+								this.jmsUsernameError = "";
+							
 							if(this.serverError == "" && this.jmsUsernameError == "") {
 								let parms = {};
 								parms.server = this.server;
+								parms.queues = this.targetQueues;
+								
 								if(this.jmsUsername.trim() != "") parms.username = this.jmsUsername.trim();
 								if(this.jmsPassword.trim() != "") parms.password = this.jmsPassword.trim();
 							
@@ -687,20 +696,29 @@ var app = new Vue({
 							server: "",
 							serverError: "",
 							xaiUsername: "",
+							xaiUsernameError: "",
 							xaiPassword: ""
 						};
 					},
 					computed: {
-						serverUrl: function() {
-							return this.servers[this.server] === undefined ? "" : this.servers[this.server].url;
-						},
+						selectedServer: function() {
+							let server = this.servers[this.server] === undefined ? 
+								{ url: "", credentialsRequired: true } : 
+								this.servers[this.server];
+							return server;
+						}
 					},
 					methods: {
 						generate: function() {
 							if(this.server == "") this.serverError = "Please select a server";
 							else this.serverError = "";
 							
-							if(this.serverError == "") {
+							if(this.selectedServer.credentialsRequired && (this.xaiUsername.trim() == "" || this.xaiPassword.trim() == ""))
+								this.xaiUsernameError = "User Name and Password are required";
+							else 
+								this.xaiUsernameError = "";
+							
+							if(this.serverError == "" && this.xaiUsernameError == "") {
 								let parms = {};
 								parms.server = this.server;
 								if(this.xaiUsername.trim() != "") parms.username = this.xaiUsername.trim();
@@ -744,17 +762,26 @@ var app = new Vue({
 							if(this.mdpError == "" && this.targetParticipantError == "" && this.targetRoleError == "")
 								this.$emit("generate-nem12-csv", {
 									mdp: this.mdp,
-									//mdpError: "",
 									targetParticipant: this.targetParticipant,
 									targetRole: this.targetRole
 								});
 						},
 						downloadNem12AseXML: function() {
-							this.$emit("generate-nem12-asexml", {
-								mdp: this.mdp,
-								targetParticipant: this.targetParticipant,
-								targetRole: this.targetRole
-							});
+							if(this.mdp == "") this.mdpError = "Please select an MDP";
+							else this.mdpError = "";
+							
+							if(this.targetParticipant == "") this.targetParticipantError = "Please select an target participant";
+							else this.targetParticipantError = "";
+							
+							if(this.mdp == "") this.mdpError = "Please select an MDP";
+							else mdpError = "";
+							
+							if(this.mdpError == "" && this.targetParticipantError == "" && this.targetRoleError == "")
+								this.$emit("generate-nem12-asexml", {
+									mdp: this.mdp,
+									targetParticipant: this.targetParticipant,
+									targetRole: this.targetRole
+								});
 						},
 						cancel: function() {
 							this.$emit("cancel");

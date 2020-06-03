@@ -17,15 +17,55 @@
     	<url>http://10.175.102.99:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
-    	<name>SVT</name>
+    	<name>PRE-PROD</name>
     	<url>http://mdmsrsrv.domain.internal/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
-    	<name>SVTO1</name>
+    	<name>PRE-PROD OL 1</name>
     	<url>http://10.175.102.130:7004/ouaf/XAIApp/xaiserver</url>
     </destination>
     <destination>
-    	<name>SVTO2</name>
+    	<name>PRE-PROD OL 2</name>
     	<url>http://10.175.102.131:7004/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 1 A</name>
+    	<url>http://10.175.102.130:7005/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 2 A</name>
+    	<url>http://10.175.102.130:7006/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 3 A</name>
+    	<url>http://10.175.102.130:7007/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 4 A</name>
+    	<url>http://10.175.102.130:7008/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 5 A</name>
+    	<url>http://10.175.102.130:7009/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 1 B</name>
+    	<url>http://10.175.102.131:7005/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 2 B</name>
+    	<url>http://10.175.102.131:7006/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 3 B</name>
+    	<url>http://10.175.102.131:7007/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 4 B</name>
+    	<url>http://10.175.102.131:7008/ouaf/XAIApp/xaiserver</url>
+    </destination>
+    <destination>
+    	<name>PRE-PROD IWS 5 B</name>
+    	<url>http://10.175.102.131:7009/ouaf/XAIApp/xaiserver</url>
     </destination>
 </xai-destinations>
