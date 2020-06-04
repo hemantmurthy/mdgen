@@ -111,7 +111,7 @@
             <button @click="addChannel(false)">Add Zero Channel</button>
 		</div>
 
-		<div id="channel-template-container">
+		<div class="channel-templates-container">
 		<table class="channel">
 		    <thead>
 		        <tr>
@@ -130,6 +130,9 @@
 					</th>
 		        </tr>
 		    </thead>
+		</table>
+		<div class="channel-reads-container">
+		<table class="channel">
 		    <tbody>
 		        <tr v-for="(interval, inti) in intervalLabels">
 		            <td>{{interval.label}}</td>
@@ -140,6 +143,7 @@
 		        </tr>
 		    </tbody>
 		</table>
+		</div>
 		</div>
 	</div>   
 	</script>

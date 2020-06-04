@@ -33,7 +33,7 @@ body {
 	box-sizing: border-box;
 	position: fixed; 
 	bottom: 0px; left: 0px;
-	padding: 0.5em 1em;
+	padding: 0.5em 2em;
 	width: 100%;
 	color: #ffffff;
 	background-color: #0086c6;
@@ -53,7 +53,7 @@ body {
 .section {
 	box-sizing: border-box;
 	width: 100%;
-	padding: 0.5em 1em;
+	padding: 0.5em 2em;
 }
 
 .modal {
@@ -121,8 +121,14 @@ table.channel {
 
 table.channel tr td,
 table.channel tr th {
+	width: 9em;
 	padding: 0.1em 0.5em;
 	text-align: center;
+}
+
+table.channel tr td:first-of-type,
+table.channel tr th:first-of-type {
+	width: 6em;
 }
 
 table.channel tr td input {
@@ -130,12 +136,20 @@ table.channel tr td input {
 	border: solid 1px black;
 	padding: 0.1em;
 }
-table.channel tr td:nth-of-type(odd),
-table.channel tr th:nth-of-type(odd) {
+/* table.channel tr td:nth-of-type(odd), */
+/* table.channel tr th:nth-of-type(odd) { */
+/* 	background-color: #dddddd; */
+/* } */
+/* table.channel tr td:first-of-type, */
+/* table.channel tr th:first-of-type { */
+/* 	background-color: transparent; */
+/* } */
+
+table.channel tbody tr:nth-of-type(odd) {
 	background-color: #dddddd;
 }
-table.channel tr td:first-of-type,
-table.channel tr th:first-of-type {
+
+table.channel tbody tr {
 	background-color: transparent;
 }
 
@@ -148,7 +162,13 @@ table.channel .cell-row .nmi-suffix {
 	margin-right: 0.4em;
 }
 
-#channel-template-container {
+.channel-templates-container {
+	box-sizing: border-box;
+	width: 100%;
+	overflow-x: auto;
+}
+
+.channel-reads-container {
 	height: 30em;
 	overflow: auto;
 }
